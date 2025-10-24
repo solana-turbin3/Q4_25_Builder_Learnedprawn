@@ -73,10 +73,10 @@ impl<'info> Withdraw<'info> {
         // TODO
         require!(self.config.locked == false, AmmError::PoolLocked);
         require!(amount != 0, AmmError::InvalidAmount);
-        require!(
-            self.mint_lp.supply == 0 && self.vault_x.amount == 0 && self.vault_y.amount == 0,
-            AmmError::NoLiquidityInPool
-        );
+        // require!(
+        //     self.mint_lp.supply == 0 && self.vault_x.amount == 0 && self.vault_y.amount == 0,
+        //     AmmError::NoLiquidityInPool
+        // );
 
         let amounts = ConstantProduct::xy_deposit_amounts_from_l(
             self.vault_x.amount,
@@ -90,7 +90,7 @@ impl<'info> Withdraw<'info> {
         let (x, y) = (amounts.x, amounts.y);
         require!(x >= min_x && y >= min_y, AmmError::SlippageExceeded);
         let _ = self.withdraw_tokens(true, x)?;
-        let _ = self.withdraw_tokens(true, y)?;
+        let _ = self.withdraw_tokens(false, y)?;
         self.burn_lp_tokens(amount)
     }
 

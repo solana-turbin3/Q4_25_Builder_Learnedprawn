@@ -85,7 +85,7 @@ impl<'info> Swap<'info> {
         let deposit_amount = swap_result.deposit;
         let withdraw_amount = swap_result.withdraw;
         self.deposit_tokens(is_x, deposit_amount)?;
-        self.deposit_tokens(is_x, withdraw_amount)
+        self.withdraw_tokens(!is_x, withdraw_amount)
     }
 
     pub fn deposit_tokens(&self, is_x: bool, amount: u64) -> Result<()> {
