@@ -89,8 +89,8 @@ impl<'info> Withdraw<'info> {
 
         let (x, y) = (amounts.x, amounts.y);
         require!(x >= min_x && y >= min_y, AmmError::SlippageExceeded);
-        self.withdraw_tokens(true, x);
-        self.withdraw_tokens(true, y);
+        let _ = self.withdraw_tokens(true, x)?;
+        let _ = self.withdraw_tokens(true, y)?;
         self.burn_lp_tokens(amount)
     }
 
@@ -107,15 +107,21 @@ impl<'info> Withdraw<'info> {
             ),
         };
 
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"config",
+            &self.config.seed.to_le_bytes(),
+            &[self.config.config_bump],
+        ]];
+
         let cpi_program = self.token_program.to_account_info();
 
         let cpi_accounts = Transfer {
             from,
             to,
-            authority: self.user.to_account_info(),
+            authority: self.config.to_account_info(),
         };
 
-        let ctx = CpiContext::new(cpi_program, cpi_accounts);
+        let ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
 
         transfer(ctx, amount)
     }
@@ -127,8 +133,10 @@ impl<'info> Withdraw<'info> {
         let cpi_accounts = Burn {
             mint: self.mint_lp.to_account_info(),
             from: self.user_lp.to_account_info(),
-            authority: self.config.to_account_info(),
+            authority: self.user.to_account_info(),
         };
+
+        // is this required?
         let signer_seeds: &[&[&[u8]]] = &[&[
             b"config",
             &self.config.seed.to_le_bytes(),
