@@ -17,9 +17,11 @@ pub struct Unstake<'info> {
 
     #[account(
         mut,
-        constraint = asset.data_is_empty() @ StakeError::AssetAlreadyInitialized
+        constraint = asset.owner == &CORE_PROGRAM_ID @ StakeError::InvalidAsset,
+        constraint = !asset.data_is_empty() @ StakeError::AssetNotInitialized
     )]
-    pub asset: Signer<'info>,
+    /// CHECK: Verified by mpl-core
+    pub asset: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -30,18 +32,21 @@ pub struct Unstake<'info> {
     pub collection: UncheckedAccount<'info>,
 
     #[account(
-        seeds = [b"stake", asset.key().as_ref(), user.key().as_ref()],
-        bump
+        mut,
+        close = user,
+        seeds = [b"stake", config.key().as_ref(), asset.key().as_ref()],
+        bump = stake_account.bump
     )]
     pub stake_account: Account<'info, StakeAccount>,
 
     #[account(
         seeds = [b"config".as_ref()],
-        bump,
+        bump = config.bump,
     )]
     pub config: Account<'info, StakeConfig>,
 
     #[account(
+        mut,
         seeds = [b"user".as_ref(), user.key().as_ref()],
         bump,
     )]
@@ -56,31 +61,41 @@ pub struct Unstake<'info> {
 
 impl<'info> Unstake<'info> {
     pub fn unstake(&mut self) -> Result<()> {
+        let time_passed = (Clock::get()?.unix_timestamp - self.stake_account.staked_at) as i64;
         require!(
-            (Clock::get()?.unix_timestamp - self.stake_account.staked_at) as u32
-                >= self.config.freeze_period,
+            time_passed >= self.config.freeze_period as i64,
             StakeError::FreezePeriodNotPassed
         );
+
+        self.user_account.amount_staked -= 1;
+        self.user_account.points += self.config.points_per_stake as u32 * time_passed as u32;
+
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"stake",
+            &self.config.key().to_bytes(),
+            &self.asset.key().to_bytes(),
+            &[self.stake_account.bump],
+        ]];
+
         UpdatePluginV1CpiBuilder::new(&self.core_program.to_account_info())
             .asset(&self.asset.to_account_info())
             .collection(Some(&self.collection.to_account_info()))
             .payer(&self.user.to_account_info())
-            .authority(Some(&self.user.to_account_info()))
-            .system_program(&self.system_program.to_account_info())
+            .authority(Some(&self.stake_account.to_account_info()))
             // Set the FreezeDelegate plugin to `frozen: true`
             .plugin(Plugin::FreezeDelegate(FreezeDelegate { frozen: false }))
-            .invoke()?;
+            .system_program(&self.system_program.to_account_info())
+            .invoke_signed(signer_seeds)?;
 
         RemovePluginV1CpiBuilder::new(&self.core_program.to_account_info())
             .asset(&self.asset.to_account_info())
             .collection(Some(&self.collection.to_account_info()))
             .payer(&self.user.to_account_info())
-            .authority(Some(&self.user.to_account_info()))
+            .authority(None)
+            .plugin_type(PluginType::FreezeDelegate)
             .system_program(&self.system_program.to_account_info())
             // Set the FreezeDelegate plugin to `frozen: true`
-            .invoke()?;
-
-        self.user_account.amount_staked = self.user_account.amount_staked.checked_sub(1).unwrap();
+            .invoke_signed(signer_seeds)?;
 
         Ok(())
     }

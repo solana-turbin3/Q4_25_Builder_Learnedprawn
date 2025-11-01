@@ -7,7 +7,6 @@ mod state;
 use instructions::*;
 
 declare_id!("FFuBsLiFRUU1scvjKHogF4sLhRRhoWynUovrBpLwf3Wd");
-// YFbRgpLHGbKisGA8GYY1ToRH1tAD4ZRLaRvFwHYkoot
 #[program]
 pub mod anchor_nft_staking_q4_25 {
     use super::*;
@@ -41,11 +40,11 @@ pub mod anchor_nft_staking_q4_25 {
         ctx.accounts.stake(&ctx.bumps)
     }
 
-    // pub fn unstake(ctx: Context<Unstake>) -> Result<()> {
-    //     ctx.accounts.unstake()
-    // }
+    pub fn unstake(ctx: Context<Unstake>) -> Result<()> {
+        ctx.accounts.unstake()
+    }
 
-    // pub fn claim(ctx: Context<Claim>) -> Result<()> {
-    //     ctx.accounts.claim()
-    // }
+    pub fn claim(ctx: Context<Claim>) -> Result<()> {
+        ctx.accounts.claim()
+    }
 }
