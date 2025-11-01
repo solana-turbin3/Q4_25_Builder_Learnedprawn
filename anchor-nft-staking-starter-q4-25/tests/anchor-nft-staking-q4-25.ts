@@ -1,7 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { AnchorNftStakingQ425 } from "../target/types/anchor_nft_staking_q4_25";
-import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  SendTransactionError,
+} from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { MPL_CORE_PROGRAM_ID } from "@metaplex-foundation/mpl-core";
 import { assert } from "chai";
@@ -147,7 +152,6 @@ describe("anchor-nft-staking-q4-25", () => {
         })
         .signers([collection])
         .rpc();
-
       console.log(`Create Collection tx: ${tx}`);
 
       const collectionInfo = await program.account.collectionInfo.fetch(
@@ -222,6 +226,7 @@ describe("anchor-nft-staking-q4-25", () => {
       assert.equal(stakeAccount.mint.toString(), asset.publicKey.toString());
       assert.ok(stakeAccount.stakedAt > new anchor.BN(0));
 
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const userAccountAfter = await program.account.userAccount.fetch(
         userAccountPda
       );
