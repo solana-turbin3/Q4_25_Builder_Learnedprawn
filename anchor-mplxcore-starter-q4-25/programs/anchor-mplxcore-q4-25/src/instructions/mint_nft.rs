@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
 use mpl_core::{
     instructions::CreateV2CpiBuilder,
-    types::{Attribute, Attributes, BurnDelegate, FreezeDelegate, Plugin, PluginAuthority, PluginAuthorityPair},
+    types::{
+        Attribute, Attributes, BurnDelegate, FreezeDelegate, Plugin, PluginAuthority,
+        PluginAuthorityPair,
+    },
     ID as CORE_PROGRAM_ID,
 };
 
@@ -76,7 +79,7 @@ impl<'info> MintNft<'info> {
                     authority: None,
                 },
                 PluginAuthorityPair {
-                    plugin: Plugin::FreezeDelegate(FreezeDelegate { frozen: true }),
+                    plugin: Plugin::FreezeDelegate(FreezeDelegate { frozen: false }),
                     authority: Some(PluginAuthority::Address {
                         address: self.collection_authority.key(),
                     }),

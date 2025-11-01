@@ -1,13 +1,13 @@
 use anchor_lang::prelude::*;
 
+mod error;
 mod instructions;
 mod state;
-mod error;
 
 use instructions::*;
 // use state::*;
 
-declare_id!("3feeK7HhTHmmr9ofcsNSb5QjQ6c8Vyhsko6E377Eo2yC");
+declare_id!("EMJFT9JdvKCsKXTHfrcsLmrBdawiN9jwUUjswwbjtAjm");
 
 #[program]
 pub mod anchor_mplxcore_q4_25 {
@@ -16,8 +16,11 @@ pub mod anchor_mplxcore_q4_25 {
     pub fn whitelist_creator(ctx: Context<WhitelistCreator>) -> Result<()> {
         ctx.accounts.whitelist_creator()
     }
-    
-    pub fn create_collection(ctx: Context<CreateCollection>, args: CreateCollectionArgs) -> Result<()> {
+
+    pub fn create_collection(
+        ctx: Context<CreateCollection>,
+        args: CreateCollectionArgs,
+    ) -> Result<()> {
         ctx.accounts.create_collection(args, &ctx.bumps)
     }
 
@@ -25,9 +28,9 @@ pub mod anchor_mplxcore_q4_25 {
         ctx.accounts.mint_nft()
     }
 
-    // pub fn freeze_nft(ctx: Context<FreezeNft>) -> Result<()> {
-    //     ctx.accounts.freeze_nft()
-    // }
+    pub fn freeze_nft(ctx: Context<FreezeNft>) -> Result<()> {
+        ctx.accounts.freeze_nft()
+    }
 
     // pub fn thaw_nft(ctx: Context<ThawNft>) -> Result<()> {
     //     ctx.accounts.thaw_nft()
