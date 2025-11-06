@@ -1,0 +1,1 @@
+1. Make authority and fee_recipient setable/optional and different.
