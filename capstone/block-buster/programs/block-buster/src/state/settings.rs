@@ -7,7 +7,7 @@ pub struct Settings {
     pub paused: bool,
     pub authority: Pubkey,
     pub fee_recipient: Pubkey,
-    pub fee_basis_points: u64,
+    pub fee_basis_points: u8,
     pub supply: u64,
     pub bump: u8,
 }

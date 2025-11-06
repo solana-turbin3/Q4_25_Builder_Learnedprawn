@@ -15,7 +15,8 @@ declare_id!("BN61uwvvUDGr9RwdHt5MNxT3ci4VNVxiC9Uxh5zdVU7X");
 pub mod block_buster {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        ctx.accounts.initialize_settings(&ctx.bumps)
+    pub fn initialize(ctx: Context<Initialize>, fee_basis_points: u8) -> Result<()> {
+        ctx.accounts
+            .initialize_settings(fee_basis_points, &ctx.bumps)
     }
 }

@@ -20,13 +20,13 @@ pub struct Initialize<'info> {
 }
 
 impl<'info> Initialize<'info> {
-    pub fn initialize_settings(&mut self, bumps: &InitializeBumps) -> Result<()> {
+    pub fn initialize_settings(&mut self, fee_basis_points: u8, bumps: &InitializeBumps) -> Result<()> {
         self.settings.set_inner(Settings {
             initialized: true,
             paused: false,
             authority: self.admin.key(),
             fee_recipient: self.admin.key(),
-            fee_basis_points: 0,
+            fee_basis_points,
             supply: 1000,
             bump: bumps.settings
         });
