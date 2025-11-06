@@ -19,4 +19,12 @@ pub mod block_buster {
         ctx.accounts
             .initialize_settings(fee_basis_points, &ctx.bumps)
     }
+    pub fn set_settings(
+        ctx: Context<SetSettings>,
+        paused: bool,
+        fee_basis_points: u8,
+    ) -> Result<()> {
+        ctx.accounts
+            .set_settings(paused, fee_basis_points, &ctx.bumps)
+    }
 }

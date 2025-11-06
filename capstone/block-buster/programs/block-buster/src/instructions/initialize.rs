@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::Settings;
+use crate::{state::Settings, SUPPLY};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -27,7 +27,7 @@ impl<'info> Initialize<'info> {
             authority: self.admin.key(),
             fee_recipient: self.admin.key(),
             fee_basis_points,
-            supply: 1000,
+            supply: SUPPLY,
             bump: bumps.settings
         });
 

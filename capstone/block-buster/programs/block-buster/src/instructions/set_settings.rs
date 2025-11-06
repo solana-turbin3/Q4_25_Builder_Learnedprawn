@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::Settings;
+use crate::{error::BlockBusterError, state::Settings, SUPPLY};
 
 #[derive(Accounts)]
 pub struct SetSettings<'info> {
@@ -11,7 +11,7 @@ pub struct SetSettings<'info> {
         mut,
         seeds = [b"settings"],
         bump,
-        constraint = settings.authority == admin.key()
+        // constraint = settings.authority == admin.key() @ BlockBusterError::NotAdmin
     )]
     pub settings: Account<'info, Settings>,
 
@@ -19,7 +19,7 @@ pub struct SetSettings<'info> {
 }
 
 impl<'info> SetSettings<'info> {
-    pub fn initialize_settings(
+    pub fn set_settings(
         &mut self,
         paused: bool,
         fee_basis_points: u8,
@@ -31,7 +31,7 @@ impl<'info> SetSettings<'info> {
             authority: self.admin.key(),
             fee_recipient: self.admin.key(),
             fee_basis_points,
-            supply: 1000,
+            supply: SUPPLY,
             bump: bumps.settings,
         });
 
