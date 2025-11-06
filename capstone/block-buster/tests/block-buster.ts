@@ -53,13 +53,12 @@ describe("block-buster", () => {
     const paused = false;
     const newFeeBasisPoints = 1;
     const tx = await program.methods
-      .setSettings(paused, newFeeBasisPoints)
+      .setSettings(paused, newAdmin.publicKey, newFeeBasisPoints)
       .accountsStrict({
-        admin: newAdmin.publicKey,
+        admin: admin.publicKey,
         settings: settingsPda,
         systemProgram: SystemProgram.programId,
       })
-      .signers([newAdmin])
       .rpc();
     console.log("Settings transaction signature", tx);
 
@@ -67,5 +66,19 @@ describe("block-buster", () => {
     assert.equal(settings.feeBasisPoints, newFeeBasisPoints);
     assert.equal(settings.initialized, true);
     assert(settings.feeRecipient.equals(newAdmin.publicKey));
+    // negative path
+    try {
+      await program.methods
+        .setSettings(paused, newAdmin.publicKey, newFeeBasisPoints)
+        .accountsStrict({
+          admin: admin.publicKey,
+          settings: settingsPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+      assert.fail("New admin can only set settings");
+    } catch (error: any) {
+      console.error(`Oops, something went wrong: ${error}`);
+    }
   });
 });

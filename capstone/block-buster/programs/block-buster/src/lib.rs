@@ -22,9 +22,10 @@ pub mod block_buster {
     pub fn set_settings(
         ctx: Context<SetSettings>,
         paused: bool,
+        new_admin: Pubkey,
         fee_basis_points: u8,
     ) -> Result<()> {
         ctx.accounts
-            .set_settings(paused, fee_basis_points, &ctx.bumps)
+            .set_settings(paused, new_admin, fee_basis_points, &ctx.bumps)
     }
 }
