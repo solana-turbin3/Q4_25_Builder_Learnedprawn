@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 #[constant]
 pub const SETTINGS: &[u8] = b"settings";
 #[constant]
-pub const SUPPLY: u64 = 1000;
+pub const SUPPLY: u64 = 1000000;
 #[constant]
 pub const MINT: &[u8] = b"mint";
 #[constant]

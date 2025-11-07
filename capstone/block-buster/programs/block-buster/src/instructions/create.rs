@@ -61,9 +61,12 @@ pub struct Create<'info> {
 }
 
 impl<'info> Create<'info> {
-    pub fn create(&mut self, bumps: &CreateBumps) -> Result<()> {
-        let signer_seeds: &[&[&[u8]]] =
-            &[&[CURVE, &self.movie_mint.to_account_info().key.as_ref()]];
+    pub fn create(&mut self, name: String, bumps: &CreateBumps) -> Result<()> {
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            CURVE,
+            &self.movie_mint.to_account_info().key.as_ref(),
+            &[bumps.bonding_curve],
+        ]];
 
         let mint_accounts = MintTo {
             authority: self.bonding_curve.to_account_info(),
@@ -80,23 +83,20 @@ impl<'info> Create<'info> {
         //Initial supply minted to bonding_curve.
         mint_to(mint_context, self.settings.supply);
 
-        let signer_seeds: &[&[&[u8]]] =
-            &[&[CURVE, &self.movie_mint.to_account_info().key.as_ref()]];
-
-        let authority_accounts = SetAuthority {
-            account_or_mint: self.movie_mint.to_account_info(),
-            current_authority: self.bonding_curve.to_account_info(),
-        };
-        let authority_context = CpiContext::new_with_signer(
-            self.token_program.to_account_info(),
-            authority_accounts,
-            signer_seeds,
-        );
-        set_authority(
-            authority_context,
-            anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
-            None,
-        );
+        // let authority_accounts = SetAuthority {
+        //     account_or_mint: self.movie_mint.to_account_info(),
+        //     current_authority: self.bonding_curve.to_account_info(),
+        // };
+        // let authority_context = CpiContext::new_with_signer(
+        //     self.token_program.to_account_info(),
+        //     authority_accounts,
+        //     signer_seeds,
+        // );
+        // set_authority(
+        //     authority_context,
+        //     anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
+        //     None,
+        // );
 
         Ok(())
     }
