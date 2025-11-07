@@ -1,1 +1,2 @@
 1. Make authority and fee_recipient setable/optional and different.
+2. Paused test.

@@ -4,4 +4,6 @@ use anchor_lang::prelude::*;
 pub enum BlockBusterError {
     #[msg("Admin not authorised")]
     NotAdmin,
+    #[msg("Program Paused")]
+    Paused,
 }
