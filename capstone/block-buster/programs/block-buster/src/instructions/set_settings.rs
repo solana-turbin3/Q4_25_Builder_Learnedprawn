@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::BlockBusterError, state::Settings, SUPPLY};
+use crate::{error::BlockBusterError, state::Settings, SETTINGS, SUPPLY};
 
 #[derive(Accounts)]
 pub struct SetSettings<'info> {
@@ -9,7 +9,7 @@ pub struct SetSettings<'info> {
 
     #[account(
         mut,
-        seeds = [b"settings"],
+        seeds = [SETTINGS.as_ref()],
         bump,
         constraint = settings.authority == admin.key() @ BlockBusterError::NotAdmin
     )]

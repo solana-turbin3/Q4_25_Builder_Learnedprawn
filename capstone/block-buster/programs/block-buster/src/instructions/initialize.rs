@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::Settings, SUPPLY};
+use crate::{state::Settings, SETTINGS, SUPPLY};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -10,7 +10,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = admin,
-        seeds = [b"settings"],
+        seeds = [SETTINGS.as_ref()],
         space = Settings::DISCRIMINATOR.len() + Settings::INIT_SPACE,
         bump 
     )]

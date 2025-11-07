@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
+use anchor_spl::{associated_token::AssociatedToken, token::{mint_to, Mint, Token, TokenAccount}};
 
-use crate::{state::Settings, BondingCurve, SUPPLY};
+use crate::{state::Settings, BondingCurve, CURVE, MINT, SETTINGS, SUPPLY, VAULT_CURVE};
 
 #[derive(Accounts)]
 #[instruction(name: String)]
@@ -12,9 +12,9 @@ pub struct Create<'info> {
     #[account(
         init,
         payer = creator,
-        seeds = [b"mint".as_ref(), name.as_bytes().as_ref(), creator.key().as_ref() ],
+        seeds = [MINT.as_ref(), name.as_bytes().as_ref(), creator.key().as_ref() ],
         mint::decimals = 6,
-        mint::authority = settings,
+        mint::authority = bonding_curve,
         bump
     )]
     pub movie_mint: Account<'info, Mint>,
@@ -22,14 +22,14 @@ pub struct Create<'info> {
     #[account(
         init,
         payer = creator,
-        seeds = [b"curve".as_ref(), movie_mint.key().as_ref()],
+        seeds = [CURVE.as_ref(), movie_mint.key().as_ref()],
         space = BondingCurve::DISCRIMINATOR.len() + BondingCurve::INIT_SPACE,
         bump
     )]
     pub bonding_curve: Account<'info, BondingCurve>,
 
     #[account(
-        seeds = [b"curve_vault".as_ref(), movie_mint.key().as_ref()],
+        seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()],
         bump
     )]
     pub vault: SystemAccount<'info>,
@@ -43,7 +43,7 @@ pub struct Create<'info> {
     pub bonding_curve_ata: Account<'info, TokenAccount>,
 
     #[account(
-        seeds = [b"settings"],
+        seeds = [SETTINGS.as_ref()],
         bump 
     )]
     pub settings: Account<'info, Settings>,
@@ -55,6 +55,10 @@ pub struct Create<'info> {
 
 impl<'info> Create<'info> {
     pub fn create(&mut self, bumps: &CreateBumps) -> Result<()> {
-        Ok(())
+        // signer_seeds:&[&[&[u8]]] = &[&[b"curve"]]
+        // mint_accounts =
+        // mint_context = CpiContext::new_with_signer(self.token_program.to_account_info(), , )
+        // mint_to(ctx, self.settings.supply);
+        // Ok(())
     }
 }
