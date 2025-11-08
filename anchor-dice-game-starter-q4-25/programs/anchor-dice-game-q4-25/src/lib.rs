@@ -7,10 +7,10 @@ use anchor_lang::prelude::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("DZDRzKdTu4SweFFjDutMgPqu55Qt9TLbhWG1cMAikYVp");
+declare_id!("HqeQs6RLaVhJv2Ce1GePZPQkmoctedH4ohtDzuh7THsT");
 
 #[program]
-pub mod anchor_dice_2024 {
+pub mod anchor_dice_game_q4_25 {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, amount: u64) -> Result<()> {
