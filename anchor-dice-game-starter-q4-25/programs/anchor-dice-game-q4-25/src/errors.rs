@@ -26,8 +26,15 @@ pub enum DiceError {
     Ed25519Signature,
     #[msg("Ed25119 Program Error")]
     Ed25519Program,
+    #[msg("Not the Ed25119 Program")]
+    NotEd25519Program,
     #[msg("Ed25119 Accounts Error")]
     Ed25519Accounts,
+    #[msg("Ed25119 Accounts length not zero")]
+    Ed25519AccountLengthNotZero,
     #[msg("Ed25119 Data Length Error")]
-    Ed25519DataLength
+    Ed25519DataLength,
+    #[msg("Ed25119 Signature Not verifiable")]
+    Ed25519NotVerifiable,
 }
+
