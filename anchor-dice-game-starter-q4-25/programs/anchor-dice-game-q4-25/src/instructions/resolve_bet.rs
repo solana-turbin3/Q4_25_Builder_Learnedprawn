@@ -5,10 +5,13 @@ use anchor_lang::{
 };
 use solana_program::{
     ed25519_program,
+    hash::hash,
     sysvar::instructions::{load_instruction_at_checked, ID},
 };
 
 use crate::{errors::DiceError, state::Bet};
+
+pub const HOUSE_EDGE: u16 = 150;
 
 #[derive(Accounts)]
 pub struct ResolveBet<'info> {
@@ -92,6 +95,8 @@ impl<'info> ResolveBet<'info> {
                 .eq(sig),
             DiceError::Ed25519Signature
         );
+
+        // Checking the content of the message to be same as what is expected (bet)
         require!(
             &signature
                 .message
@@ -103,6 +108,40 @@ impl<'info> ResolveBet<'info> {
         Ok(())
     }
     pub fn resolve_bet(&mut self, sig: &Vec<u8>, bumps: &ResolveBetBumps) -> Result<()> {
+        let hash = hash(sig).to_bytes();
+        let mut hash_16: [u8; 16] = [0; 16];
+        hash_16.copy_from_slice(&hash[0..16]);
+        let lower = u128::from_le_bytes(hash_16);
+        hash_16.copy_from_slice(&hash[16..32]);
+        let upper = u128::from_le_bytes(hash_16);
+
+        let roll = (lower.wrapping_add(upper).wrapping_rem(100) as u8) + 1;
+
+        if self.bet.roll > roll {
+            let payout = (self.bet.amount as u128)
+                .checked_mul(1000 - (HOUSE_EDGE as u128))
+                .ok_or(DiceError::Overflow)?
+                .checked_div((roll as u128) - 1)
+                .ok_or(DiceError::Overflow)?
+                .checked_div(100)
+                .ok_or(DiceError::Overflow)? as u64;
+            let transfer_accounts = Transfer {
+                from: self.vault.to_account_info(),
+                to: self.player.to_account_info(),
+            };
+
+            let signer_seeds: &[&[&[u8]]] =
+                &[&[b"vault", &self.house.key().to_bytes(), &[bumps.vault]]];
+
+            let transfer_context = CpiContext::new_with_signer(
+                self.system_program.to_account_info(),
+                transfer_accounts,
+                signer_seeds,
+            );
+
+            transfer(transfer_context, payout)?;
+        }
+
         Ok(())
     }
 }
