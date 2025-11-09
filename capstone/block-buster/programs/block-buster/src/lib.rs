@@ -29,7 +29,14 @@ pub mod block_buster {
             .set_settings(paused, new_admin, fee_basis_points, &ctx.bumps)
     }
 
-    pub fn create(ctx: Context<Create>, name: String) -> Result<()> {
-        ctx.accounts.create(name, &ctx.bumps)
+    pub fn create(
+        ctx: Context<Create>,
+        name: String,
+        uri: String,
+        initializer_share: u64,
+        total_fundraising: u64,
+    ) -> Result<()> {
+        ctx.accounts
+            .create(name, uri, initializer_share, total_fundraising, &ctx.bumps)
     }
 }

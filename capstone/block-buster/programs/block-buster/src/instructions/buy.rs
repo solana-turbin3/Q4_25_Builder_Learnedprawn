@@ -1,0 +1,92 @@
+use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
+};
+
+use crate::{
+    bonding_curve, error::BlockBusterError, state::Settings, BondingCurve, CURVE, MINT, SETTINGS,
+    SUPPLY, VAULT_CURVE,
+};
+
+#[derive(Accounts)]
+pub struct Buy<'info> {
+    #[account(mut)]
+    pub buyer: Signer<'info>,
+
+    #[account(
+        seeds = [MINT.as_ref(), bonding_curve.name.as_bytes().as_ref(), bonding_curve.initializer.key().as_ref() ],
+        mint::decimals = 6,
+        mint::authority = bonding_curve,
+        bump
+    )]
+    pub movie_mint: Account<'info, Mint>,
+
+    #[account(
+        seeds = [CURVE.as_ref(), movie_mint.key().as_ref()],
+        bump
+    )]
+    pub bonding_curve: Account<'info, BondingCurve>,
+
+    #[account(
+        seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()],
+        bump
+    )]
+    pub vault: SystemAccount<'info>,
+
+    #[account(
+        init_if_needed,
+        payer = buyer,
+        associated_token::mint = movie_mint,
+        associated_token::authority = bonding_curve
+    )]
+    pub buyer_ata: Account<'info, TokenAccount>,
+    #[account(
+        seeds = [SETTINGS.as_ref()],
+        bump = settings.bump,
+        constraint = !settings.paused @ BlockBusterError::Paused
+    )]
+    pub settings: Account<'info, Settings>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+}
+
+impl<'info> Buy<'info> {
+    pub fn buy(&mut self, amount_in_sol: u64, bumps: &BuyBumps) -> Result<()> {
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            CURVE,
+            &self.movie_mint.to_account_info().key.as_ref(),
+            &[bumps.bonding_curve],
+        ]];
+
+        let mint_accounts = MintTo {
+            authority: self.bonding_curve.to_account_info(),
+            mint: self.movie_mint.to_account_info(),
+            to: self.buyer_ata.to_account_info(),
+        };
+
+        let mint_context = CpiContext::new_with_signer(
+            self.token_program.to_account_info(),
+            mint_accounts,
+            signer_seeds,
+        );
+
+        let token_amount = self.calculate_token_amount(amount_in_sol);
+
+        mint_to(mint_context, token_amount)?;
+
+        Ok(())
+    }
+
+    //using a linear bonding curve for PoC
+    // let price  = a*supply + initial_price;
+    pub fn calculate_token_amount(&mut self, amount_in_sol: u64) -> u64 {
+        let slope = 1;
+        let initial_price = 1;
+        let price_in_sol = slope * self.bonding_curve.token_reserve + initial_price;
+
+        return 0;
+    }
+}

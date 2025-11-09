@@ -5,6 +5,7 @@ import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
+  getMint,
 } from "@solana/spl-token";
 import { assert } from "chai";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
@@ -160,5 +161,14 @@ describe("block-buster", () => {
       (bondingCurveAtaBalance * 10 ** DECIMALS).toString(),
       settings.supply.toString()
     );
+    const bondingCurve = await program.account.bondingCurve.fetch(
+      bondingCurvePda
+    );
+    assert.equal(bondingCurve.complete, false);
+    const movieMint = await getMint(provider.connection, movieMintPda);
+    assert.equal(movieMint.mintAuthority, null);
+    console.log("Mint authority:", movieMint.mintAuthority);
+    console.log("Decimals:", movieMint.decimals);
+    console.log("Supply:", Number(movieMint.supply));
   });
 });
