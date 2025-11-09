@@ -1,12 +1,15 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{
+    prelude::*,
+    system_program::{transfer, Transfer},
+};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
 };
 
 use crate::{
-    bonding_curve, error::BlockBusterError, state::Settings, BondingCurve, CURVE, MINT, SETTINGS,
-    SUPPLY, VAULT_CURVE,
+    bonding_curve, error::BlockBusterError, state::Settings, BondingCurve, CURVE, DECIMALS, MINT,
+    SETTINGS, SUPPLY, VAULT_CURVE,
 };
 
 #[derive(Accounts)]
@@ -55,6 +58,16 @@ pub struct Buy<'info> {
 
 impl<'info> Buy<'info> {
     pub fn buy(&mut self, amount_in_sol: u64, bumps: &BuyBumps) -> Result<()> {
+        let transfer_accounts = Transfer {
+            from: self.buyer.to_account_info(),
+            to: self.vault.to_account_info(),
+        };
+
+        let cpi_transfer_context =
+            CpiContext::new(self.system_program.to_account_info(), transfer_accounts);
+
+        transfer(cpi_transfer_context, amount_in_sol);
+
         let signer_seeds: &[&[&[u8]]] = &[&[
             CURVE,
             &self.movie_mint.to_account_info().key.as_ref(),
@@ -75,7 +88,8 @@ impl<'info> Buy<'info> {
 
         let token_amount = self.calculate_token_amount(amount_in_sol);
 
-        mint_to(mint_context, token_amount)?;
+        //TODO: decimal precision
+        mint_to(mint_context, token_amount * DECIMALS)?;
 
         Ok(())
     }
@@ -85,8 +99,9 @@ impl<'info> Buy<'info> {
     pub fn calculate_token_amount(&mut self, amount_in_sol: u64) -> u64 {
         let slope = 1;
         let initial_price = 1;
-        let price_in_sol = slope * self.bonding_curve.token_reserve + initial_price;
+        let token_price_in_sol = slope * self.bonding_curve.token_reserve + initial_price;
+        let token_amount = amount_in_sol / token_price_in_sol;
 
-        return 0;
+        token_amount
     }
 }
