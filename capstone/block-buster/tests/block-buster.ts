@@ -2,14 +2,11 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { BlockBuster } from "../target/types/block_buster";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddressSync,
-  getMint,
-} from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, getMint } from "@solana/spl-token";
 import { assert } from "chai";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
+import { BN } from "bn.js";
 
 describe("block-buster", () => {
   // Configure the client to use the local cluster.
@@ -135,39 +132,63 @@ describe("block-buster", () => {
       console.error(`Oops, something went wrong: ${error}`);
     }
   });
-  it("Create Token Mints and Revokes Authority", async () => {
+  // it("Create Token Mints and Revokes Authority", async () => {
+  //   const tx = await program.methods
+  //     .create("testtoken")
+  //     .accountsStrict({
+  //       creator: creator.publicKey,
+  //       movieMint: movieMintPda,
+  //       bondingCurve: bondingCurvePda,
+  //       vault: vaultPda,
+  //       bondingCurveAta: bondingCurveAta,
+  //       settings: settingsPda,
+  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       systemProgram: SYSTEM_PROGRAM_ID,
+  //     })
+  //     .signers([creator])
+  //     .rpc();
+  //   console.log("Create transaction signature", tx);
+  //
+  //   const bondingCurveAtaBalance = (
+  //     await provider.connection.getTokenAccountBalance(bondingCurveAta)
+  //   ).value.uiAmount;
+  //   const settings = await program.account.settings.fetch(settingsPda);
+  //   assert.equal(
+  //     (bondingCurveAtaBalance * 10 ** DECIMALS).toString(),
+  //     settings.supply.toString()
+  //   );
+  //   const bondingCurve = await program.account.bondingCurve.fetch(
+  //     bondingCurvePda
+  //   );
+  //   assert.equal(bondingCurve.complete, false);
+  //   const movieMint = await getMint(provider.connection, movieMintPda);
+  //   assert.equal(movieMint.mintAuthority, null);
+  //   console.log("Mint authority:", movieMint.mintAuthority);
+  //   console.log("Decimals:", movieMint.decimals);
+  //   console.log("Supply:", Number(movieMint.supply));
+  // });
+  it("Create Token Mint and initialize bonding curve values", async () => {
     const tx = await program.methods
-      .create("testtoken")
+      .create("testtoken", "TEST", "uri", new BN(10), new BN(1000))
       .accountsStrict({
         creator: creator.publicKey,
         movieMint: movieMintPda,
         bondingCurve: bondingCurvePda,
         vault: vaultPda,
-        bondingCurveAta: bondingCurveAta,
         settings: settingsPda,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SYSTEM_PROGRAM_ID,
       })
       .signers([creator])
       .rpc();
-    console.log("Create transaction signature", tx);
-
-    const bondingCurveAtaBalance = (
-      await provider.connection.getTokenAccountBalance(bondingCurveAta)
-    ).value.uiAmount;
-    const settings = await program.account.settings.fetch(settingsPda);
-    assert.equal(
-      (bondingCurveAtaBalance * 10 ** DECIMALS).toString(),
-      settings.supply.toString()
-    );
+    console.log("Create Token transaction: ", tx);
     const bondingCurve = await program.account.bondingCurve.fetch(
       bondingCurvePda
     );
     assert.equal(bondingCurve.complete, false);
     const movieMint = await getMint(provider.connection, movieMintPda);
-    assert.equal(movieMint.mintAuthority, null);
-    console.log("Mint authority:", movieMint.mintAuthority);
+    console.log("Mint authority:", movieMint.mintAuthority.toString());
     console.log("Decimals:", movieMint.decimals);
     console.log("Supply:", Number(movieMint.supply));
   });

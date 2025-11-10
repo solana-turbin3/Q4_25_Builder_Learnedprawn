@@ -71,6 +71,7 @@ impl<'info> Create<'info> {
     pub fn create(
         &mut self,
         name: String,
+        symbol: String,
         uri: String,
         initializer_share: u64,
         total_fundraising: u64,
@@ -118,6 +119,7 @@ impl<'info> Create<'info> {
         self.bonding_curve.set_inner(BondingCurve {
             mint: self.movie_mint.key(),
             name,
+            symbol,
             uri,
             completion_lamports: total_fundraising,
             token_reserve: 0,

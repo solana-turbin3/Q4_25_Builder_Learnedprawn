@@ -8,6 +8,8 @@ pub struct BondingCurve {
     #[max_len(10)]
     pub name: String,
     #[max_len(10)]
+    pub symbol: String,
+    #[max_len(10)]
     pub uri: String,
     pub completion_lamports: u64,
     pub token_reserve: u64,
