@@ -9,14 +9,6 @@ use crate::{
     SUPPLY, VAULT_CURVE,
 };
 
-// #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-// pub struct TokenDetails {
-//     pub name: String,
-//     pub symbol: String,
-//     pub uri: String,
-//     pub creator_share: u64,
-// }
-
 #[derive(Accounts)]
 #[instruction(name: String)]
 pub struct Create<'info> {
@@ -77,45 +69,6 @@ impl<'info> Create<'info> {
         total_fundraising: u64,
         bumps: &CreateBumps,
     ) -> Result<()> {
-        // let signer_seeds: &[&[&[u8]]] = &[&[
-        //     CURVE,
-        //     &self.movie_mint.to_account_info().key.as_ref(),
-        //     &[bumps.bonding_curve],
-        // ]];
-        //
-        // let mint_accounts = MintTo {
-        //     authority: self.bonding_curve.to_account_info(),
-        //     mint: self.movie_mint.to_account_info(),
-        //     to: self.bonding_curve_ata.to_account_info(),
-        // };
-        //
-        // let mint_context = CpiContext::new_with_signer(
-        //     self.token_program.to_account_info(),
-        //     mint_accounts,
-        //     signer_seeds,
-        // );
-        //
-        // //Initial supply minted to bonding_curve.
-        // mint_to(mint_context, self.settings.supply)?;
-        //
-        // let authority_accounts = SetAuthority {
-        //     account_or_mint: self.movie_mint.to_account_info(),
-        //     current_authority: self.bonding_curve.to_account_info(),
-        // };
-        // let authority_context = CpiContext::new_with_signer(
-        //     self.token_program.to_account_info(),
-        //     authority_accounts,
-        //     signer_seeds,
-        // );
-        // set_authority(
-        //     authority_context,
-        //     anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
-        //     None,
-        // )?;
-        //
-        //using a linear bonding curve for PoC
-        // let price  = a*supply + initial_price;
-
         self.bonding_curve.set_inner(BondingCurve {
             mint: self.movie_mint.key(),
             name,
@@ -135,3 +88,42 @@ impl<'info> Create<'info> {
         Ok(())
     }
 }
+
+// let signer_seeds: &[&[&[u8]]] = &[&[
+//     CURVE,
+//     &self.movie_mint.to_account_info().key.as_ref(),
+//     &[bumps.bonding_curve],
+// ]];
+//
+// let mint_accounts = MintTo {
+//     authority: self.bonding_curve.to_account_info(),
+//     mint: self.movie_mint.to_account_info(),
+//     to: self.bonding_curve_ata.to_account_info(),
+// };
+//
+// let mint_context = CpiContext::new_with_signer(
+//     self.token_program.to_account_info(),
+//     mint_accounts,
+//     signer_seeds,
+// );
+//
+// //Initial supply minted to bonding_curve.
+// mint_to(mint_context, self.settings.supply)?;
+//
+// let authority_accounts = SetAuthority {
+//     account_or_mint: self.movie_mint.to_account_info(),
+//     current_authority: self.bonding_curve.to_account_info(),
+// };
+// let authority_context = CpiContext::new_with_signer(
+//     self.token_program.to_account_info(),
+//     authority_accounts,
+//     signer_seeds,
+// );
+// set_authority(
+//     authority_context,
+//     anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
+//     None,
+// )?;
+//
+//using a linear bonding curve for PoC
+// let price  = a*supply + initial_price;
