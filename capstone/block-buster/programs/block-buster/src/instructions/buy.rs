@@ -18,6 +18,7 @@ pub struct Buy<'info> {
     pub buyer: Signer<'info>,
 
     #[account(
+        mut,
         seeds = [MINT.as_ref(), bonding_curve.name.as_bytes().as_ref(), bonding_curve.initializer.key().as_ref() ],
         mint::decimals = 6,
         mint::authority = bonding_curve,
@@ -32,6 +33,7 @@ pub struct Buy<'info> {
     pub bonding_curve: Account<'info, BondingCurve>,
 
     #[account(
+        mut,
         seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()],
         bump
     )]
@@ -41,7 +43,7 @@ pub struct Buy<'info> {
         init_if_needed,
         payer = buyer,
         associated_token::mint = movie_mint,
-        associated_token::authority = bonding_curve
+        associated_token::authority = buyer 
     )]
     pub buyer_ata: Account<'info, TokenAccount>,
     #[account(
@@ -58,6 +60,7 @@ pub struct Buy<'info> {
 
 impl<'info> Buy<'info> {
     pub fn buy(&mut self, amount_in_sol: u64, bumps: &BuyBumps) -> Result<()> {
+
         let transfer_accounts = Transfer {
             from: self.buyer.to_account_info(),
             to: self.vault.to_account_info(),
@@ -66,7 +69,7 @@ impl<'info> Buy<'info> {
         let cpi_transfer_context =
             CpiContext::new(self.system_program.to_account_info(), transfer_accounts);
 
-        transfer(cpi_transfer_context, amount_in_sol);
+        transfer(cpi_transfer_context, amount_in_sol)?;
 
         let signer_seeds: &[&[&[u8]]] = &[&[
             CURVE,

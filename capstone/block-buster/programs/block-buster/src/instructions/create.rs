@@ -1,4 +1,7 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{
+    prelude::*,
+    system_program::{transfer, Transfer},
+};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
@@ -35,6 +38,7 @@ pub struct Create<'info> {
     pub bonding_curve: Account<'info, BondingCurve>,
 
     #[account(
+        mut,
         seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()],
         bump
     )]
@@ -69,6 +73,15 @@ impl<'info> Create<'info> {
         total_fundraising: u64,
         bumps: &CreateBumps,
     ) -> Result<()> {
+        let rent_exempt: u64 =
+            Rent::get()?.minimum_balance(self.vault.to_account_info().data_len());
+        let cpi_program = self.system_program.to_account_info();
+        let cpi_accounts = Transfer {
+            from: self.creator.to_account_info(),
+            to: self.vault.to_account_info(),
+        };
+        let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
+        transfer(cpi_context, rent_exempt)?;
         self.bonding_curve.set_inner(BondingCurve {
             mint: self.movie_mint.key(),
             name,

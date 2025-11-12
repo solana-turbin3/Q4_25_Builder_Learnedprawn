@@ -1,9 +1,19 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { BlockBuster } from "../target/types/block_buster";
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync, getMint } from "@solana/spl-token";
-import { assert } from "chai";
+import {
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+} from "@solana/web3.js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  getMint,
+  getAccount,
+} from "@solana/spl-token";
+import { assert, expect } from "chai";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 import { BN } from "bn.js";
@@ -24,6 +34,7 @@ describe("block-buster", () => {
 
   const newAdmin = Keypair.generate();
   const creator = Keypair.generate();
+  const buyer = Keypair.generate();
   console.log("creator: ", creator.publicKey.toString());
 
   const name = "test";
@@ -40,6 +51,7 @@ describe("block-buster", () => {
   let bondingCurvePda: PublicKey;
   let vaultPda: PublicKey;
   let bondingCurveAta: PublicKey;
+  let buyerAta: PublicKey;
 
   before(async () => {
     settingsPda = PublicKey.findProgramAddressSync(
@@ -75,9 +87,16 @@ describe("block-buster", () => {
       true
     );
     console.log("Bonding Curve ATA: ", bondingCurveAta.toString());
+    buyerAta = getAssociatedTokenAddressSync(
+      movieMintPda,
+      buyer.publicKey,
+      true
+    );
+    console.log("Buyer ATA: ", buyerAta.toString());
 
     await connection.requestAirdrop(newAdmin.publicKey, 5_000_000_000); // 5 SOL
     await connection.requestAirdrop(creator.publicKey, 5_000_000_000); // 5 SOL
+    await connection.requestAirdrop(buyer.publicKey, 5_000_000_000); // 5 SOL
     await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
@@ -253,5 +272,71 @@ describe("block-buster", () => {
       10,
       "Initializer share mismatch"
     );
+    console.log(
+      "Vault SOL Balance: ",
+      await connection.getBalanceAndContext(vaultPda)
+    );
+  });
+  it("Buyer buys token and transfers sol", async () => {
+    // 1️⃣  PRE-STATE SNAPSHOT
+    const buyerStartBalance = await connection.getBalance(buyer.publicKey);
+    const vaultStartBalance = await connection.getBalance(vaultPda);
+
+    let buyerTokensBefore = 0;
+    try {
+      buyerTokensBefore = (
+        await provider.connection.getTokenAccountBalance(buyerAta)
+      ).value.uiAmount;
+      console.log("Initial Buyer Tokens:", buyerTokensBefore);
+    } catch (e: any) {
+      console.log("Account does not exist yet");
+    }
+
+    console.log("Initial Buyer SOL:", buyerStartBalance);
+    console.log("Initial Vault SOL:", vaultStartBalance);
+
+    const amountInSol = 1 * LAMPORTS_PER_SOL; // 1 SOL
+    let tx = await program.methods
+      .buy(new BN(amountInSol))
+      .accountsStrict({
+        buyer: buyer.publicKey,
+        movieMint: movieMintPda,
+        bondingCurve: bondingCurvePda,
+        vault: vaultPda,
+        buyerAta: buyerAta,
+        settings: settingsPda,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SYSTEM_PROGRAM_ID,
+      })
+      .signers([buyer])
+      .rpc();
+    console.log("Buy transaction ID: ", tx);
+    // 3️⃣  POST-STATE SNAPSHOT
+    const buyerEndBalance = await connection.getBalance(buyer.publicKey);
+    const vaultEndBalance = await connection.getBalance(vaultPda);
+
+    const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
+    const buyerTokensAfter = Number(buyerAtaInfoAfter.amount);
+
+    console.log("Final Buyer SOL:", buyerEndBalance);
+    console.log("Final Vault SOL:", vaultEndBalance);
+    console.log("Final Buyer Tokens:", buyerTokensAfter);
+
+    const solTransferred = vaultEndBalance - vaultStartBalance;
+    const buyerSolSpent = buyerStartBalance - buyerEndBalance;
+
+    // Note: buyerSolSpent will include transaction fee (~5000 lamports), so we use >=
+    expect(solTransferred).to.equal(amountInSol);
+    expect(buyerSolSpent).to.be.greaterThanOrEqual(amountInSol);
+
+    // 🔸 (B) Buyer ATA received tokens
+    expect(buyerTokensAfter).to.be.greaterThan(buyerTokensBefore);
+
+    // 🔸 (C) Token mint total supply should match (optional but good)
+    const mintInfo = await getMint(connection, movieMintPda);
+    expect(Number(mintInfo.supply)).to.equal(buyerTokensAfter);
+
+    console.log("✅ Assertions passed!");
   });
 });
