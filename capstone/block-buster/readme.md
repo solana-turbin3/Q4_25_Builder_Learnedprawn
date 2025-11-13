@@ -38,7 +38,10 @@ while **creators** can gauge audience interest and raise funds without tradition
 
 ## ⚙️ Architecture Overview
 
+### End-to-end Overview:
+
 ![End-to-end Overview](./documentation/assets/end-to-end-overview.png)
+
 ```
 
 Creator (Filmmaker)
