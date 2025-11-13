@@ -160,24 +160,15 @@ programs/
     ├── state.rs                # Account structures (BondingCurve, Settings)
     ├── error.rs                # Custom errors
     └── instructions/
+        └── buy.rs              # Users buy movie tokens for SOL
         └── create.rs           # Create movie mint & bonding curve
+        └── initialize.rs       # Initialize the global config settings
+        └── mod.rs
+        └── sell.rs             # Users sell movie tokens for SOL
+        └── set_settings.rs     # Change the global config settings
 tests/
 └── blockbuster.test.ts         # Mocha test suite
 ```
-
----
-
-## 📜 License
-
-MIT License © 2025 [Your Name / GitHub handle]
-
----
-
-## 💬 Author
-
-**Vinesh Paralkar**
-[GitHub: Learnedprawn](https://github.com/Learnedprawn)
-[LinkedIn](https://www.linkedin.com/in/vinesh-paralkar-7b0bb1223/)
 
 ---
 
