@@ -46,10 +46,6 @@ while **creators** can gauge audience interest and raise funds without tradition
 
 ![initialize](./documentation/assets/initialize.png)
 
-### set_settings:
-
-![set_settings](./documentation/assets/set_settings.png)
-
 ### create:
 
 ![create](./documentation/assets/create.png)
@@ -71,19 +67,19 @@ while **creators** can gauge audience interest and raise funds without tradition
 ![sell](./documentation/assets/sell.png)
 
 ```
+Flow:
 
-Creator (Filmmaker)
-↓ creates campaign
+Creator creates movie token.
 ↓
-[ Movie Token Mint ]  ←─ controlled by BondingCurve PDA
+Buyers invest in movie and buy/sell tokens with SOl.
 ↓
-[ BondingCurve Account ] ← stores reserves, funding target, metadata
+After fundraising is complete creator collects the funds.
 ↓
-Fans buy tokens with SOL/USDC
+After movie creation creator releases the movie.
 ↓
-Funds accumulate in on-chain vault
+Fans buy movie tickets (NFTs) with SOL.
 ↓
-Creator withdraws funds after successful raise
+Movie token holders can redeem their tokens in exchange for movie profit SOL.
 
 ```
 
@@ -145,6 +141,7 @@ Creator withdraws funds after successful raise
 ```bash
 anchor build
 anchor deploy
+yarn install
 anchor test
 ```
 
