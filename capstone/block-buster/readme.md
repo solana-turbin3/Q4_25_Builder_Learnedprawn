@@ -161,8 +161,10 @@ programs/
         └── create.rs           # Create movie mint & bonding curve
         └── initialize.rs       # Initialize the global config settings
         └── mod.rs
+        └── release.rs          # Creator release movie for viewing
         └── sell.rs             # Users sell movie tokens for SOL
         └── set_settings.rs     # Change the global config settings
+        └── watch.rs            # Users pay for movie NFT tickets using SOl
 tests/
 └── blockbuster.test.ts         # Mocha test suite
 ```
