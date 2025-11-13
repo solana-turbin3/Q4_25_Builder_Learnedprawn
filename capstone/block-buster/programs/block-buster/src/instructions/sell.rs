@@ -4,7 +4,7 @@ use anchor_lang::{
 };
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
+    token::{burn, mint_to, set_authority, Burn, Mint, MintTo, SetAuthority, Token, TokenAccount},
 };
 
 use crate::{
@@ -13,7 +13,7 @@ use crate::{
 };
 
 #[derive(Accounts)]
-pub struct Buy<'info> {
+pub struct Sell<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
 
@@ -40,8 +40,7 @@ pub struct Buy<'info> {
     pub vault: SystemAccount<'info>,
 
     #[account(
-        init_if_needed,
-        payer = buyer,
+        mut,
         associated_token::mint = movie_mint,
         associated_token::authority = buyer 
     )]
@@ -58,18 +57,8 @@ pub struct Buy<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Buy<'info> {
-    pub fn buy(&mut self, amount_in_sol: u64, bumps: &BuyBumps) -> Result<()> {
-
-        let transfer_accounts = Transfer {
-            from: self.buyer.to_account_info(),
-            to: self.vault.to_account_info(),
-        };
-
-        let cpi_transfer_context =
-            CpiContext::new(self.system_program.to_account_info(), transfer_accounts);
-
-        transfer(cpi_transfer_context, amount_in_sol)?;
+impl<'info> Sell<'info> {
+    pub fn sell(&mut self, amount_in_tokens: u64, bumps: &SellBumps) -> Result<()> {
 
         let signer_seeds: &[&[&[u8]]] = &[&[
             CURVE,
@@ -77,34 +66,43 @@ impl<'info> Buy<'info> {
             &[bumps.bonding_curve],
         ]];
 
-        let mint_accounts = MintTo {
-            authority: self.bonding_curve.to_account_info(),
+        let burn_accounts = Burn {
+            authority: self.buyer.to_account_info(),
             mint: self.movie_mint.to_account_info(),
-            to: self.buyer_ata.to_account_info(),
+            from: self.buyer_ata.to_account_info(),
         };
 
-        let mint_context = CpiContext::new_with_signer(
+        let burn_context = CpiContext::new_with_signer(
             self.token_program.to_account_info(),
-            mint_accounts,
+            burn_accounts,
             signer_seeds,
         );
 
-        let token_amount = self.calculate_token_amount(amount_in_sol);
-
         //TODO: decimal precision
-        mint_to(mint_context, token_amount)?;
+        burn(burn_context, amount_in_tokens)?;
 
+        let sol_amount = self.calculate_sol_amount(amount_in_tokens);
+
+        let transfer_accounts = Transfer {
+            from: self.vault.to_account_info(),
+            to: self.buyer.to_account_info(),
+        };
+
+        let cpi_transfer_context =
+            CpiContext::new(self.system_program.to_account_info(), transfer_accounts);
+
+        transfer(cpi_transfer_context, sol_amount)?;
         Ok(())
     }
 
     //using a linear bonding curve for PoC
     // let price  = a*supply + initial_price;
-    pub fn calculate_token_amount(&mut self, amount_in_sol: u64) -> u64 {
+    pub fn calculate_sol_amount(&mut self, amount_in_tokens: u64) -> u64 {
         let slope = 1;
         let initial_price = 1;
         let token_price_in_sol = slope * self.bonding_curve.token_reserve + initial_price;
-        let token_amount = amount_in_sol / token_price_in_sol;
+        let sol_amount = amount_in_tokens * token_price_in_sol;
 
-        token_amount
+       sol_amount 
     }
 }

@@ -13,6 +13,7 @@ declare_id!("BN61uwvvUDGr9RwdHt5MNxT3ci4VNVxiC9Uxh5zdVU7X");
 
 #[program]
 pub mod block_buster {
+
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, fee_basis_points: u8) -> Result<()> {
@@ -48,5 +49,8 @@ pub mod block_buster {
     }
     pub fn buy(ctx: Context<Buy>, amount_in_sol: u64) -> Result<()> {
         ctx.accounts.buy(amount_in_sol, &ctx.bumps)
+    }
+    pub fn sell(ctx: Context<Sell>, amount_in_sol: u64) -> Result<()> {
+        ctx.accounts.sell(amount_in_sol, &ctx.bumps)
     }
 }
