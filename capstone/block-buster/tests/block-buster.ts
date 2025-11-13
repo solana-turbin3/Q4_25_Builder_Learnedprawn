@@ -422,9 +422,29 @@ describe("block-buster", () => {
   });
   it("Creator release movie and exit pool gets created", async () => {
     const tx = await program.methods
-      .release()
+      .release(new BN(1))
       .accountsStrict({
         creator: creator.publicKey,
+        movieMint: movieMintPda,
+        bondingCurve: bondingCurvePda,
+        exitPool: exitPoolPda,
+        systemProgram: SYSTEM_PROGRAM_ID,
+      })
+      .signers([creator])
+      .rpc();
+
+    console.log("Transaction Signature: ", tx);
+
+    const exitPoolBalance = await connection.getBalance(exitPoolPda);
+    console.log("exitPoolBalance: ", exitPoolBalance);
+    assert(exitPoolBalance > 0, "Balance should be greater than 0");
+  });
+  it("Viewer pays ticket price in SOL and receives NFT", async () => {
+    //TODO: Mint NFT    const tx = await program.methods
+    const tx = await program.methods
+      .watch()
+      .accountsStrict({
+        view: creator.publicKey,
         movieMint: movieMintPda,
         bondingCurve: bondingCurvePda,
         exitPool: exitPoolPda,

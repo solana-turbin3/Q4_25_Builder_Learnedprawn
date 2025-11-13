@@ -95,6 +95,7 @@ impl<'info> Create<'info> {
             complete: false,
             initializer: self.creator.key(),
             initializer_share,
+            ticket_price: 0,
             curve_bump: self.bonding_curve.curve_bump,
             vault_bump: self.bonding_curve.vault_bump,
         });

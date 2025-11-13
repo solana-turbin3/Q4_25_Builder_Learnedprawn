@@ -18,6 +18,7 @@ pub struct BondingCurve {
     pub complete: bool,
     pub initializer: Pubkey,
     pub initializer_share: u64,
+    pub ticket_price: u64,
     pub curve_bump: u8,
     pub vault_bump: u8,
 }

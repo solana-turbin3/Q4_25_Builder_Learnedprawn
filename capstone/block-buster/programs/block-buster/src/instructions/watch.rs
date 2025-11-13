@@ -10,12 +10,12 @@ use crate::{
 };
 
 #[derive(Accounts)]
-pub struct Release<'info> {
+pub struct Watch<'info> {
     #[account(mut)]
-    pub creator: Signer<'info>,
+    pub viewer: Signer<'info>,
 
     #[account(
-        seeds = [MINT.as_ref(), bonding_curve.name.as_bytes().as_ref(), creator.key().as_ref() ],
+        seeds = [MINT.as_ref(), bonding_curve.name.as_bytes().as_ref(), bonding_curve.initializer.key().as_ref() ],
         mint::decimals = 6,
         mint::authority = bonding_curve,
         bump
@@ -39,18 +39,15 @@ pub struct Release<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Release<'info> {
-    pub fn release(&mut self, ticket_price: u64, bumps: &ReleaseBumps) -> Result<()> {
-        let rent_exempt: u64 =
-            Rent::get()?.minimum_balance(self.exit_pool.to_account_info().data_len());
+impl<'info> Watch<'info> {
+    pub fn watch(&mut self, bumps: &WatchBumps) -> Result<()> {
         let cpi_program = self.system_program.to_account_info();
         let cpi_accounts = Transfer {
-            from: self.creator.to_account_info(),
+            from: self.viewer.to_account_info(),
             to: self.exit_pool.to_account_info(),
         };
         let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
-        transfer(cpi_context, rent_exempt)?;
-        self.bonding_curve.ticket_price = ticket_price;
+        transfer(cpi_context, self.bonding_curve.ticket_price)?;
         Ok(())
     }
 }
