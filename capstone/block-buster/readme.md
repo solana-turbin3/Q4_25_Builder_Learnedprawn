@@ -38,6 +38,7 @@ while **creators** can gauge audience interest and raise funds without tradition
 
 ## ⚙️ Architecture Overview
 
+![End-to-end Overview](./documentation/assets/end-to-end-overview.png)
 ```
 
 Creator (Filmmaker)
@@ -60,7 +61,7 @@ Creator withdraws funds after successful raise
 1. **`create`** — Initializes a movie mint and bonding curve account.
 2. **`buy`** — Fans purchase tokens; bonding curve mints and distributes dynamically.
 3. **`withdraw`** — Allows the creator to claim funds when campaign goals are met.
-4. \*\*`sell` — Enables token holders to sell back into the bonding curve or trade on DEXs.
+4. **`sell`** — Enables token holders to sell back into the bonding curve or trade on DEXs.
 
 ---
 
@@ -68,7 +69,7 @@ Creator withdraws funds after successful raise
 
 - **Token Standard:** SPL Token (6 decimals)
 - **Bonding Curve Model:** Linear for PoC → `P(S) = p₀ + k·S`
-- **Initial Price:** Adjustable base (e.g., 0.5 USDC per token)
+- **Initial Price:** Adjustable base (e.g., 0.5 SOL per token)
 - **Reserve Asset:** SOL
 - **Creator Share:** Configurable percentage during campaign creation
 - **Platform Fee:** Optional (e.g., 2–5%) for protocol maintenance and LP seeding
