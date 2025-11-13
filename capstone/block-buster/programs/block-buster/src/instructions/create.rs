@@ -73,6 +73,7 @@ impl<'info> Create<'info> {
         total_fundraising: u64,
         bumps: &CreateBumps,
     ) -> Result<()> {
+        // TODO: what about + 10000??
         let rent_exempt: u64 =
             Rent::get()?.minimum_balance(self.vault.to_account_info().data_len());
         let cpi_program = self.system_program.to_account_info();
@@ -81,7 +82,7 @@ impl<'info> Create<'info> {
             to: self.vault.to_account_info(),
         };
         let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
-        transfer(cpi_context, rent_exempt)?;
+        transfer(cpi_context, rent_exempt + 10000)?;
         self.bonding_curve.set_inner(BondingCurve {
             mint: self.movie_mint.key(),
             name,

@@ -6,4 +6,6 @@ pub enum BlockBusterError {
     NotAdmin,
     #[msg("Program Paused")]
     Paused,
+    #[msg("Overflow")]
+    Overflow,
 }

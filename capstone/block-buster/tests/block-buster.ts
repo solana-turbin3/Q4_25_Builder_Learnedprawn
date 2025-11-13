@@ -50,6 +50,7 @@ describe("block-buster", () => {
   let movieMintPda: PublicKey;
   let bondingCurvePda: PublicKey;
   let vaultPda: PublicKey;
+  let exitPoolPda: PublicKey;
   let bondingCurveAta: PublicKey;
   let buyerAta: PublicKey;
 
@@ -72,14 +73,20 @@ describe("block-buster", () => {
       [Buffer.from("curve"), movieMintPda.toBuffer()],
       program.programId
     )[0];
-    console.log("Bonding Curve PDA: ", movieMintPda.toString());
+    console.log("Bonding Curve PDA: ", bondingCurvePda.toString());
 
     vaultPda = PublicKey.findProgramAddressSync(
       // (seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()]),
       [Buffer.from("curve_vault"), movieMintPda.toBuffer()],
       program.programId
     )[0];
-    console.log("Vault PDA: ", movieMintPda.toString());
+    console.log("Vault PDA: ", vaultPda.toString());
+    exitPoolPda = PublicKey.findProgramAddressSync(
+      // (seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()]),
+      [Buffer.from("exit_pool"), movieMintPda.toBuffer()],
+      program.programId
+    )[0];
+    console.log("exit pool PDA: ", exitPoolPda.toString());
 
     bondingCurveAta = getAssociatedTokenAddressSync(
       movieMintPda,
@@ -346,9 +353,11 @@ describe("block-buster", () => {
 
     let buyerTokensBefore = 0;
     try {
-      buyerTokensBefore = (
-        await provider.connection.getTokenAccountBalance(buyerAta)
-      ).value.uiAmount;
+      const buyerAtaInfoBefore = await getAccount(connection, buyerAta);
+      buyerTokensBefore = Number(buyerAtaInfoBefore.amount);
+      // buyerTokensBefore = (
+      //   await provider.connection.getTokenAccountBalance(buyerAta)
+      // ).value.uiAmount;
       console.log("Initial Buyer Tokens:", buyerTokensBefore);
     } catch (e: any) {
       console.log("Account does not exist yet");
@@ -381,24 +390,53 @@ describe("block-buster", () => {
     const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
     const buyerTokensAfter = Number(buyerAtaInfoAfter.amount);
 
+    // const buyerTokensAfter =
+    //   (await provider.connection.getTokenAccountBalance(buyerAta)).value
+    //     .uiAmount;
     console.log("Final Buyer SOL:", buyerEndBalance);
     console.log("Final Vault SOL:", vaultEndBalance);
     console.log("Final Buyer Tokens:", buyerTokensAfter);
 
-    const solTransferred = vaultEndBalance - vaultStartBalance;
-    const buyerSolSpent = buyerStartBalance - buyerEndBalance;
+    const solTransferred = vaultStartBalance - vaultEndBalance;
 
-    // Note: buyerSolSpent will include transaction fee (~5000 lamports), so we use >=
-    // expect(solTransferred).to.equal(amountInSol);
-    // expect(buyerSolSpent).to.be.greaterThanOrEqual(amountInSol);
+    assert(
+      buyerStartBalance + solTransferred == buyerEndBalance,
+      "Buyer and vault balance mismatch"
+    );
 
     // 🔸 (B) Buyer ATA received tokens
-    expect(buyerTokensAfter).to.be.lessThan(buyerTokensBefore);
+    assert(
+      buyerTokensAfter < buyerTokensBefore,
+      "Buyer tokens should decrease after sell"
+    );
+    assert(
+      buyerStartBalance < buyerEndBalance,
+      "Buyer SOL balance should increase after sell"
+    );
 
     // 🔸 (C) Token mint total supply should match (optional but good)
     const mintInfo = await getMint(connection, movieMintPda);
     expect(Number(mintInfo.supply)).to.equal(buyerTokensAfter);
 
     console.log("✅ Assertions passed!");
+  });
+  it("Creator release movie and exit pool gets created", async () => {
+    const tx = await program.methods
+      .release()
+      .accountsStrict({
+        creator: creator.publicKey,
+        movieMint: movieMintPda,
+        bondingCurve: bondingCurvePda,
+        exitPool: exitPoolPda,
+        systemProgram: SYSTEM_PROGRAM_ID,
+      })
+      .signers([creator])
+      .rpc();
+
+    console.log("Transaction Signature: ", tx);
+
+    const exitPoolBalance = await connection.getBalance(exitPoolPda);
+    console.log("exitPoolBalance: ", exitPoolBalance);
+    assert(exitPoolBalance > 0, "Balance should be greater than 0");
   });
 });

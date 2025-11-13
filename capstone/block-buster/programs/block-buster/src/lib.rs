@@ -53,4 +53,7 @@ pub mod block_buster {
     pub fn sell(ctx: Context<Sell>, amount_in_sol: u64) -> Result<()> {
         ctx.accounts.sell(amount_in_sol, &ctx.bumps)
     }
+    pub fn release(ctx: Context<Release>) -> Result<()> {
+        ctx.accounts.release(&ctx.bumps)
+    }
 }

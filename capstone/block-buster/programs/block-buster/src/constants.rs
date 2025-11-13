@@ -12,3 +12,5 @@ pub const MINT: &[u8] = b"mint";
 pub const CURVE: &[u8] = b"curve";
 #[constant]
 pub const VAULT_CURVE: &[u8] = b"curve_vault";
+#[constant]
+pub const EXIT_POOL: &[u8] = b"exit_pool";

@@ -81,7 +81,16 @@ impl<'info> Sell<'info> {
         //TODO: decimal precision
         burn(burn_context, amount_in_tokens)?;
 
-        let sol_amount = self.calculate_sol_amount(amount_in_tokens);
+        self.bonding_curve.token_reserve -= amount_in_tokens;
+
+        let sol_amount = self.calculate_sol_amount(amount_in_tokens).expect("calculation failed");
+
+        let transfer_signer_seeds: &[&[&[u8]]] = &[&[
+        // seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()],
+            VAULT_CURVE,
+            &self.movie_mint.to_account_info().key.as_ref(),
+            &[bumps.vault],
+        ]];
 
         let transfer_accounts = Transfer {
             from: self.vault.to_account_info(),
@@ -89,7 +98,7 @@ impl<'info> Sell<'info> {
         };
 
         let cpi_transfer_context =
-            CpiContext::new(self.system_program.to_account_info(), transfer_accounts);
+            CpiContext::new_with_signer(self.system_program.to_account_info(), transfer_accounts, transfer_signer_seeds);
 
         transfer(cpi_transfer_context, sol_amount)?;
         Ok(())
@@ -97,12 +106,12 @@ impl<'info> Sell<'info> {
 
     //using a linear bonding curve for PoC
     // let price  = a*supply + initial_price;
-    pub fn calculate_sol_amount(&mut self, amount_in_tokens: u64) -> u64 {
-        let slope = 1;
-        let initial_price = 1;
-        let token_price_in_sol = slope * self.bonding_curve.token_reserve + initial_price;
+    pub fn calculate_sol_amount(&mut self, amount_in_tokens: u64) -> Result<u64 >{
+        let slope: u64 = 1;
+        let initial_price: u64 = 1;
+        let token_price_in_sol: u64 = slope.checked_mul(self.bonding_curve.token_reserve as u64).ok_or(BlockBusterError::Overflow)?.checked_add(initial_price).ok_or(BlockBusterError::Overflow)?;  
         let sol_amount = amount_in_tokens * token_price_in_sol;
 
-       sol_amount 
+       Ok(sol_amount)
     }
 }

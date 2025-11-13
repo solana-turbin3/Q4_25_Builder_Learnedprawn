@@ -27,6 +27,7 @@ pub struct Buy<'info> {
     pub movie_mint: Account<'info, Mint>,
 
     #[account(
+        mut,
         seeds = [CURVE.as_ref(), movie_mint.key().as_ref()],
         bump
     )]
@@ -89,22 +90,23 @@ impl<'info> Buy<'info> {
             signer_seeds,
         );
 
-        let token_amount = self.calculate_token_amount(amount_in_sol);
+        let token_amount = self.calculate_token_amount(amount_in_sol).expect("calculation failed");
 
         //TODO: decimal precision
         mint_to(mint_context, token_amount)?;
+        self.bonding_curve.token_reserve += token_amount;
 
         Ok(())
     }
 
     //using a linear bonding curve for PoC
     // let price  = a*supply + initial_price;
-    pub fn calculate_token_amount(&mut self, amount_in_sol: u64) -> u64 {
-        let slope = 1;
-        let initial_price = 1;
-        let token_price_in_sol = slope * self.bonding_curve.token_reserve + initial_price;
+    pub fn calculate_token_amount(&mut self, amount_in_sol: u64) -> Result<u64> {
+        let slope: u64 = 1;
+        let initial_price: u64 = 1;
+        let token_price_in_sol: u64 = slope.checked_mul(self.bonding_curve.token_reserve as u64).ok_or(BlockBusterError::Overflow)?.checked_add(initial_price).ok_or(BlockBusterError::Overflow)?;  
         let token_amount = amount_in_sol / token_price_in_sol;
 
-        token_amount
+        Ok(token_amount)
     }
 }
