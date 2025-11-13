@@ -1,7 +1,5 @@
----
+# 🎬 Block-Buster
 
-```markdown
-# 🎬 Block-Buster  
 **Decentralized Movie Crowdfunding & Tokenization Platform on Solana**
 
 Block-Buster revolutionizes how movies are funded, owned, and experienced.  
@@ -186,9 +184,3 @@ MIT License © 2025 [Your Name / GitHub handle]
 ## 🌐 Vision
 
 > _Block-Buster bridges the worlds of art and finance — letting audiences not just watch, but own the stories they believe in._
-
-```
-
----
-
-```
