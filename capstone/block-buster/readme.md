@@ -5,7 +5,7 @@
 Block-Buster revolutionizes how movies are funded, owned, and experienced.  
 It allows filmmakers to raise production capital directly from the public through **tokenized crowdfunding campaigns**, where fans and investors can buy **Movie Tokens** tied to real projects.
 
-Each movie becomes its own micro-economy — funded, tracked, and traded transparently on-chain.
+Each movie becomes its own micro-economy funded, tracked, and traded transparently on-chain.
 
 ---
 
@@ -60,7 +60,7 @@ Creator withdraws funds after successful raise
 1. **`create`** — Initializes a movie mint and bonding curve account.
 2. **`buy`** — Fans purchase tokens; bonding curve mints and distributes dynamically.
 3. **`withdraw`** — Allows the creator to claim funds when campaign goals are met.
-4. **(Future)** `sell` — Enables token holders to sell back into the bonding curve or trade on DEXs.
+4. \*\*`sell` — Enables token holders to sell back into the bonding curve or trade on DEXs.
 
 ---
 
@@ -69,7 +69,7 @@ Creator withdraws funds after successful raise
 - **Token Standard:** SPL Token (6 decimals)
 - **Bonding Curve Model:** Linear for PoC → `P(S) = p₀ + k·S`
 - **Initial Price:** Adjustable base (e.g., 0.5 USDC per token)
-- **Reserve Asset:** USDC (for stability and valuation transparency)
+- **Reserve Asset:** SOL
 - **Creator Share:** Configurable percentage during campaign creation
 - **Platform Fee:** Optional (e.g., 2–5%) for protocol maintenance and LP seeding
 
@@ -84,41 +84,7 @@ Creator withdraws funds after successful raise
 | **Tokens**            | SPL Token Standard                                                         |
 | **Frontend**          | React + TypeScript (planned)                                               |
 | **Indexing (future)** | [Yellowstone Vixen](https://github.com/rpcpool/yellowstone-vixen) / Carbon |
-| **Storage**           | IPFS / Arweave for metadata                                                |
-| **Wallets**           | Phantom / Solflare                                                         |
 | **Testing**           | Mocha + Chai + Anchor Test Suite                                           |
-
----
-
-## 🧪 Example Test (Anchor)
-
-```typescript
-it("Create Token Mint and initialize bonding curve values", async () => {
-  const tx = await program.methods
-    .create("testtoken", "TEST", "uri", new BN(10), new BN(1000))
-    .accountsStrict({
-      creator: creator.publicKey,
-      movieMint: movieMintPda,
-      bondingCurve: bondingCurvePda,
-      vault: vaultPda,
-      settings: settingsPda,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SYSTEM_PROGRAM_ID,
-    })
-    .signers([creator])
-    .rpc();
-
-  const bondingCurve = await program.account.bondingCurve.fetch(
-    bondingCurvePda
-  );
-  const movieMint = await getMint(provider.connection, movieMintPda);
-
-  assert.equal(bondingCurve.complete, false);
-  assert.equal(movieMint.decimals, 6);
-  assert.ok(movieMint.mintAuthority.equals(bondingCurvePda));
-  assert.equal(Number(movieMint.supply), 0);
-});
-```
 
 ---
 
@@ -128,10 +94,9 @@ it("Create Token Mint and initialize bonding curve values", async () => {
 | ---------------- | -------------------------------------------------- | -------------- |
 | 🎬 PoC           | Deploy core Anchor contracts & test basic flow     | ✅ Done        |
 | 💎 Token Trading | Integrate bonding curve buy/sell logic             | 🧠 In progress |
-| 🧭 Indexer       | Integrate Yellowstone Vixen for event parsing      | 🧱 Planned     |
 | 🖥 Frontend DApp  | React interface for creators & fans                | 🧱 Planned     |
-| 🎟 Ticketing      | On-chain ticket sales using movie tokens           | 💡 Future      |
-| 💼 Revenue Share | Distribute future film profits via smart contracts | 💡 Future      |
+| 🎟 Ticketing      | On-chain ticket sales using movie tokens           | 🧱 Planned     |
+| 💼 Revenue Share | Distribute future film profits via smart contracts | 🧱 Planned     |
 
 ---
 
@@ -174,4 +139,4 @@ tests/
 
 ## 🌐 Vision
 
-> _Block-Buster bridges the worlds of art and finance — letting audiences not just watch, but own the stories they believe in._
+> _Block-Buster bridges the worlds of art and finance, letting audiences not just watch, but own the stories they believe in._
