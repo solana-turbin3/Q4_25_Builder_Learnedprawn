@@ -42,6 +42,34 @@ while **creators** can gauge audience interest and raise funds without tradition
 
 ![End-to-end Overview](./documentation/assets/end-to-end-overview.png)
 
+### initialize:
+
+![initialize](./documentation/assets/initialize.png)
+
+### set_settings:
+
+![set_settings](./documentation/assets/set_settings.png)
+
+### create:
+
+![create](./documentation/assets/create.png)
+
+### buy:
+
+![buy](./documentation/assets/buy.png)
+
+### release:
+
+![release](./documentation/assets/release.png)
+
+### watch:
+
+![watch](./documentation/assets/watch.png)
+
+### sell:
+
+![sell](./documentation/assets/sell.png)
+
 ```
 
 Creator (Filmmaker)
