@@ -8,6 +8,7 @@ use crate::{
     error::BlockBusterError, state::Settings, BondingCurve, CURVE, EXIT_POOL, MINT, SETTINGS,
     SUPPLY, VAULT_CURVE,
 };
+use mpl_core::{instructions::CreateV2CpiBuilder, ID as CORE_PROGRAM_ID};
 
 #[derive(Accounts)]
 pub struct Watch<'info> {
@@ -36,9 +37,12 @@ pub struct Watch<'info> {
     )]
     pub exit_pool: SystemAccount<'info>,
 
+    /// CHECK: This will also be checked by core
+    pub core_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
+// TODO: Mint NFT
 impl<'info> Watch<'info> {
     pub fn watch(&mut self, bumps: &WatchBumps) -> Result<()> {
         let cpi_program = self.system_program.to_account_info();
@@ -48,6 +52,9 @@ impl<'info> Watch<'info> {
         };
         let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
         transfer(cpi_context, self.bonding_curve.ticket_price)?;
+
+        // CreateV2CpiBuilder::new(&self.core_program.to_account_info())
+
         Ok(())
     }
 }

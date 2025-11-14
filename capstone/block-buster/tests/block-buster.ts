@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { BlockBuster } from "../target/types/block_buster";
+import { MPL_CORE_PROGRAM_ID } from "@metaplex-foundation/mpl-core";
 import {
   Keypair,
   LAMPORTS_PER_SOL,
@@ -354,80 +355,80 @@ describe("block-buster", () => {
 
     console.log("✅ Assertions passed!");
   });
-  // it("Buyer sells token and receives sol", async () => {
-  //   // 1️⃣  PRE-STATE SNAPSHOT
-  //   const buyerStartBalance = await connection.getBalance(buyer.publicKey);
-  //   const vaultStartBalance = await connection.getBalance(vaultPda);
-  //
-  //   let buyerTokensBefore = 0;
-  //   try {
-  //     const buyerAtaInfoBefore = await getAccount(connection, buyerAta);
-  //     buyerTokensBefore = Number(buyerAtaInfoBefore.amount);
-  //     // buyerTokensBefore = (
-  //     //   await provider.connection.getTokenAccountBalance(buyerAta)
-  //     // ).value.uiAmount;
-  //     console.log("Initial Buyer Tokens:", buyerTokensBefore);
-  //   } catch (e: any) {
-  //     console.log("Account does not exist yet");
-  //   }
-  //
-  //   console.log("Initial Buyer SOL:", buyerStartBalance);
-  //   console.log("Initial Vault SOL:", vaultStartBalance);
-  //
-  //   const amountInTokens = 1; // 1 token
-  //   let tx = await program.methods
-  //     .sell(new BN(amountInTokens))
-  //     .accountsStrict({
-  //       buyer: buyer.publicKey,
-  //       movieMint: movieMintPda,
-  //       bondingCurve: bondingCurvePda,
-  //       vault: vaultPda,
-  //       buyerAta: buyerAta,
-  //       settings: settingsPda,
-  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       systemProgram: SYSTEM_PROGRAM_ID,
-  //     })
-  //     .signers([buyer])
-  //     .rpc();
-  //   console.log("Buy transaction ID: ", tx);
-  //   // 3️⃣  POST-STATE SNAPSHOT
-  //   const buyerEndBalance = await connection.getBalance(buyer.publicKey);
-  //   const vaultEndBalance = await connection.getBalance(vaultPda);
-  //
-  //   const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
-  //   const buyerTokensAfter = Number(buyerAtaInfoAfter.amount);
-  //
-  //   // const buyerTokensAfter =
-  //   //   (await provider.connection.getTokenAccountBalance(buyerAta)).value
-  //   //     .uiAmount;
-  //   console.log("Final Buyer SOL:", buyerEndBalance);
-  //   console.log("Final Vault SOL:", vaultEndBalance);
-  //   console.log("Final Buyer Tokens:", buyerTokensAfter);
-  //
-  //   const solTransferred = vaultStartBalance - vaultEndBalance;
-  //
-  //   assert(
-  //     buyerStartBalance + solTransferred == buyerEndBalance,
-  //     "Buyer and vault balance mismatch"
-  //   );
-  //
-  //   // 🔸 (B) Buyer ATA received tokens
-  //   assert(
-  //     buyerTokensAfter < buyerTokensBefore,
-  //     "Buyer tokens should decrease after sell"
-  //   );
-  //   assert(
-  //     buyerStartBalance < buyerEndBalance,
-  //     "Buyer SOL balance should increase after sell"
-  //   );
-  //
-  //   // 🔸 (C) Token mint total supply should match (optional but good)
-  //   const mintInfo = await getMint(connection, movieMintPda);
-  //   expect(Number(mintInfo.supply)).to.equal(buyerTokensAfter);
-  //
-  //   console.log("✅ Assertions passed!");
-  // });
+  it("Buyer sells token and receives sol", async () => {
+    // 1️⃣  PRE-STATE SNAPSHOT
+    const buyerStartBalance = await connection.getBalance(buyer.publicKey);
+    const vaultStartBalance = await connection.getBalance(vaultPda);
+
+    let buyerTokensBefore = 0;
+    try {
+      const buyerAtaInfoBefore = await getAccount(connection, buyerAta);
+      buyerTokensBefore = Number(buyerAtaInfoBefore.amount);
+      // buyerTokensBefore = (
+      //   await provider.connection.getTokenAccountBalance(buyerAta)
+      // ).value.uiAmount;
+      console.log("Initial Buyer Tokens:", buyerTokensBefore);
+    } catch (e: any) {
+      console.log("Account does not exist yet");
+    }
+
+    console.log("Initial Buyer SOL:", buyerStartBalance);
+    console.log("Initial Vault SOL:", vaultStartBalance);
+
+    const amountInTokens = 1; // 1 token
+    let tx = await program.methods
+      .sell(new BN(amountInTokens))
+      .accountsStrict({
+        buyer: buyer.publicKey,
+        movieMint: movieMintPda,
+        bondingCurve: bondingCurvePda,
+        vault: vaultPda,
+        buyerAta: buyerAta,
+        settings: settingsPda,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SYSTEM_PROGRAM_ID,
+      })
+      .signers([buyer])
+      .rpc();
+    console.log("Buy transaction ID: ", tx);
+    // 3️⃣  POST-STATE SNAPSHOT
+    const buyerEndBalance = await connection.getBalance(buyer.publicKey);
+    const vaultEndBalance = await connection.getBalance(vaultPda);
+
+    const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
+    const buyerTokensAfter = Number(buyerAtaInfoAfter.amount);
+
+    // const buyerTokensAfter =
+    //   (await provider.connection.getTokenAccountBalance(buyerAta)).value
+    //     .uiAmount;
+    console.log("Final Buyer SOL:", buyerEndBalance);
+    console.log("Final Vault SOL:", vaultEndBalance);
+    console.log("Final Buyer Tokens:", buyerTokensAfter);
+
+    const solTransferred = vaultStartBalance - vaultEndBalance;
+
+    assert(
+      buyerStartBalance + solTransferred == buyerEndBalance,
+      "Buyer and vault balance mismatch"
+    );
+
+    // 🔸 (B) Buyer ATA received tokens
+    assert(
+      buyerTokensAfter < buyerTokensBefore,
+      "Buyer tokens should decrease after sell"
+    );
+    assert(
+      buyerStartBalance < buyerEndBalance,
+      "Buyer SOL balance should increase after sell"
+    );
+
+    // 🔸 (C) Token mint total supply should match (optional but good)
+    const mintInfo = await getMint(connection, movieMintPda);
+    expect(Number(mintInfo.supply)).to.equal(buyerTokensAfter);
+
+    console.log("✅ Assertions passed!");
+  });
   it("Creator release movie and exit pool gets created", async () => {
     const tx = await program.methods
       .release(new BN(TICKET_PRICE))
@@ -460,6 +461,7 @@ describe("block-buster", () => {
         movieMint: movieMintPda,
         bondingCurve: bondingCurvePda,
         exitPool: exitPoolPda,
+        coreProgram: MPL_CORE_PROGRAM_ID,
         systemProgram: SYSTEM_PROGRAM_ID,
       })
       .signers([viewer])

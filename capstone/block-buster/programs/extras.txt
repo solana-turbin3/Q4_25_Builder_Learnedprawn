@@ -4,3 +4,9 @@
 4. Add threshold reached mechanisms for release, watch and timelock mechanism.
 5. change the "extra rent"
 
+
+add collection to tickets?
+
+IMP:
+1. Make Initial price and slop variable.
+
