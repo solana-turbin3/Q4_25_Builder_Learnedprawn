@@ -28,12 +28,14 @@ describe("block-buster", () => {
 
   const feeBasisPoints = 0;
   const DECIMALS = 6;
+  const TICKET_PRICE = 1;
 
   const admin = provider.wallet;
   console.log("Admin: ", admin.publicKey.toString());
 
   const newAdmin = Keypair.generate();
   const creator = Keypair.generate();
+  const viewer = Keypair.generate();
   const buyer = Keypair.generate();
   console.log("creator: ", creator.publicKey.toString());
 
@@ -104,6 +106,7 @@ describe("block-buster", () => {
     await connection.requestAirdrop(newAdmin.publicKey, 5_000_000_000); // 5 SOL
     await connection.requestAirdrop(creator.publicKey, 5_000_000_000); // 5 SOL
     await connection.requestAirdrop(buyer.publicKey, 5_000_000_000); // 5 SOL
+    await connection.requestAirdrop(viewer.publicKey, 5_000_000_000); // 5 SOL
     await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
@@ -422,7 +425,7 @@ describe("block-buster", () => {
   });
   it("Creator release movie and exit pool gets created", async () => {
     const tx = await program.methods
-      .release(new BN(1))
+      .release(new BN(TICKET_PRICE))
       .accountsStrict({
         creator: creator.publicKey,
         movieMint: movieMintPda,
@@ -440,23 +443,29 @@ describe("block-buster", () => {
     assert(exitPoolBalance > 0, "Balance should be greater than 0");
   });
   it("Viewer pays ticket price in SOL and receives NFT", async () => {
-    //TODO: Mint NFT    const tx = await program.methods
+    //TODO: Mint NFT
+
+    const exitPoolBalanceBefore = await connection.getBalance(exitPoolPda);
+    console.log("exitPoolBalanceBefore: ", exitPoolBalanceBefore);
     const tx = await program.methods
       .watch()
       .accountsStrict({
-        view: creator.publicKey,
+        viewer: viewer.publicKey,
         movieMint: movieMintPda,
         bondingCurve: bondingCurvePda,
         exitPool: exitPoolPda,
         systemProgram: SYSTEM_PROGRAM_ID,
       })
-      .signers([creator])
+      .signers([viewer])
       .rpc();
 
     console.log("Transaction Signature: ", tx);
 
-    const exitPoolBalance = await connection.getBalance(exitPoolPda);
-    console.log("exitPoolBalance: ", exitPoolBalance);
-    assert(exitPoolBalance > 0, "Balance should be greater than 0");
+    const exitPoolBalanceAfter = await connection.getBalance(exitPoolPda);
+    console.log("exitPoolBalanceAfter: ", exitPoolBalanceAfter);
+    assert(
+      exitPoolBalanceAfter > exitPoolBalanceBefore,
+      "Balance should be greater than before"
+    );
   });
 });

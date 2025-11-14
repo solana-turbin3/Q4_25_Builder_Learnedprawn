@@ -60,22 +60,15 @@ pub struct Sell<'info> {
 impl<'info> Sell<'info> {
     pub fn sell(&mut self, amount_in_tokens: u64, bumps: &SellBumps) -> Result<()> {
 
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            CURVE,
-            &self.movie_mint.to_account_info().key.as_ref(),
-            &[bumps.bonding_curve],
-        ]];
-
         let burn_accounts = Burn {
             authority: self.buyer.to_account_info(),
             mint: self.movie_mint.to_account_info(),
             from: self.buyer_ata.to_account_info(),
         };
 
-        let burn_context = CpiContext::new_with_signer(
+        let burn_context = CpiContext::new(
             self.token_program.to_account_info(),
             burn_accounts,
-            signer_seeds,
         );
 
         //TODO: decimal precision

@@ -1,4 +1,5 @@
 1. Make authority and fee_recipient setable/optional and different.
 2. Paused test.
 3. Use metadata to store name and uri maybe.
+4. Add threshold reached mechanisms for release, watch and timelock mechanism.
 

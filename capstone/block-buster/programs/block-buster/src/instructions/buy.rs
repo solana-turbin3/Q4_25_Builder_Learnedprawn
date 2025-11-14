@@ -104,7 +104,7 @@ impl<'info> Buy<'info> {
     pub fn calculate_token_amount(&mut self, amount_in_sol: u64) -> Result<u64> {
         let slope: u64 = 1;
         let initial_price: u64 = 1;
-        let token_price_in_sol: u64 = slope.checked_mul(self.bonding_curve.token_reserve as u64).ok_or(BlockBusterError::Overflow)?.checked_add(initial_price).ok_or(BlockBusterError::Overflow)?;  
+        let token_price_in_sol: u64 = slope.checked_mul(self.movie_mint.supply as u64).ok_or(BlockBusterError::Overflow)?.checked_add(initial_price).ok_or(BlockBusterError::Overflow)?;  
         let token_amount = amount_in_sol / token_price_in_sol;
 
         Ok(token_amount)
