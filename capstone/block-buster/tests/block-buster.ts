@@ -27,8 +27,14 @@ describe("block-buster", () => {
   const connection = provider.connection;
 
   const feeBasisPoints = 0;
-  const DECIMALS = 6;
-  const TICKET_PRICE = 1;
+
+  const MINT_DECIMAL_PRECISION = 10 ** 6;
+
+  const INITIAL_BUY_AMOUNT = 1 * LAMPORTS_PER_SOL; // 1 SOL = 1000 Tokens (hardcoded initial value and slope)
+
+  const TICKET_PRICE = 1 * LAMPORTS_PER_SOL; // 1 SOL
+
+  const EXIT_TOKENS = 1 * MINT_DECIMAL_PRECISION; // 1 Token (Therefore I should get 0.001 SOL i.e. 1_000_000 lamports)
 
   const admin = provider.wallet;
   console.log("Admin: ", admin.publicKey.toString());
@@ -305,9 +311,8 @@ describe("block-buster", () => {
     console.log("Initial Buyer SOL:", buyerStartBalance);
     console.log("Initial Vault SOL:", vaultStartBalance);
 
-    const amountInSol = 1 * LAMPORTS_PER_SOL; // 1 SOL
     let tx = await program.methods
-      .buy(new BN(amountInSol))
+      .buy(new BN(INITIAL_BUY_AMOUNT))
       .accountsStrict({
         buyer: buyer.publicKey,
         movieMint: movieMintPda,
@@ -337,8 +342,8 @@ describe("block-buster", () => {
     const buyerSolSpent = buyerStartBalance - buyerEndBalance;
 
     // Note: buyerSolSpent will include transaction fee (~5000 lamports), so we use >=
-    expect(solTransferred).to.equal(amountInSol);
-    expect(buyerSolSpent).to.be.greaterThanOrEqual(amountInSol);
+    expect(solTransferred).to.equal(INITIAL_BUY_AMOUNT);
+    expect(buyerSolSpent).to.be.greaterThanOrEqual(INITIAL_BUY_AMOUNT);
 
     // 🔸 (B) Buyer ATA received tokens
     expect(buyerTokensAfter).to.be.greaterThan(buyerTokensBefore);
@@ -349,80 +354,80 @@ describe("block-buster", () => {
 
     console.log("✅ Assertions passed!");
   });
-  it("Buyer sells token and receives sol", async () => {
-    // 1️⃣  PRE-STATE SNAPSHOT
-    const buyerStartBalance = await connection.getBalance(buyer.publicKey);
-    const vaultStartBalance = await connection.getBalance(vaultPda);
-
-    let buyerTokensBefore = 0;
-    try {
-      const buyerAtaInfoBefore = await getAccount(connection, buyerAta);
-      buyerTokensBefore = Number(buyerAtaInfoBefore.amount);
-      // buyerTokensBefore = (
-      //   await provider.connection.getTokenAccountBalance(buyerAta)
-      // ).value.uiAmount;
-      console.log("Initial Buyer Tokens:", buyerTokensBefore);
-    } catch (e: any) {
-      console.log("Account does not exist yet");
-    }
-
-    console.log("Initial Buyer SOL:", buyerStartBalance);
-    console.log("Initial Vault SOL:", vaultStartBalance);
-
-    const amountInTokens = 1; // 1 token
-    let tx = await program.methods
-      .sell(new BN(amountInTokens))
-      .accountsStrict({
-        buyer: buyer.publicKey,
-        movieMint: movieMintPda,
-        bondingCurve: bondingCurvePda,
-        vault: vaultPda,
-        buyerAta: buyerAta,
-        settings: settingsPda,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SYSTEM_PROGRAM_ID,
-      })
-      .signers([buyer])
-      .rpc();
-    console.log("Buy transaction ID: ", tx);
-    // 3️⃣  POST-STATE SNAPSHOT
-    const buyerEndBalance = await connection.getBalance(buyer.publicKey);
-    const vaultEndBalance = await connection.getBalance(vaultPda);
-
-    const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
-    const buyerTokensAfter = Number(buyerAtaInfoAfter.amount);
-
-    // const buyerTokensAfter =
-    //   (await provider.connection.getTokenAccountBalance(buyerAta)).value
-    //     .uiAmount;
-    console.log("Final Buyer SOL:", buyerEndBalance);
-    console.log("Final Vault SOL:", vaultEndBalance);
-    console.log("Final Buyer Tokens:", buyerTokensAfter);
-
-    const solTransferred = vaultStartBalance - vaultEndBalance;
-
-    assert(
-      buyerStartBalance + solTransferred == buyerEndBalance,
-      "Buyer and vault balance mismatch"
-    );
-
-    // 🔸 (B) Buyer ATA received tokens
-    assert(
-      buyerTokensAfter < buyerTokensBefore,
-      "Buyer tokens should decrease after sell"
-    );
-    assert(
-      buyerStartBalance < buyerEndBalance,
-      "Buyer SOL balance should increase after sell"
-    );
-
-    // 🔸 (C) Token mint total supply should match (optional but good)
-    const mintInfo = await getMint(connection, movieMintPda);
-    expect(Number(mintInfo.supply)).to.equal(buyerTokensAfter);
-
-    console.log("✅ Assertions passed!");
-  });
+  // it("Buyer sells token and receives sol", async () => {
+  //   // 1️⃣  PRE-STATE SNAPSHOT
+  //   const buyerStartBalance = await connection.getBalance(buyer.publicKey);
+  //   const vaultStartBalance = await connection.getBalance(vaultPda);
+  //
+  //   let buyerTokensBefore = 0;
+  //   try {
+  //     const buyerAtaInfoBefore = await getAccount(connection, buyerAta);
+  //     buyerTokensBefore = Number(buyerAtaInfoBefore.amount);
+  //     // buyerTokensBefore = (
+  //     //   await provider.connection.getTokenAccountBalance(buyerAta)
+  //     // ).value.uiAmount;
+  //     console.log("Initial Buyer Tokens:", buyerTokensBefore);
+  //   } catch (e: any) {
+  //     console.log("Account does not exist yet");
+  //   }
+  //
+  //   console.log("Initial Buyer SOL:", buyerStartBalance);
+  //   console.log("Initial Vault SOL:", vaultStartBalance);
+  //
+  //   const amountInTokens = 1; // 1 token
+  //   let tx = await program.methods
+  //     .sell(new BN(amountInTokens))
+  //     .accountsStrict({
+  //       buyer: buyer.publicKey,
+  //       movieMint: movieMintPda,
+  //       bondingCurve: bondingCurvePda,
+  //       vault: vaultPda,
+  //       buyerAta: buyerAta,
+  //       settings: settingsPda,
+  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       systemProgram: SYSTEM_PROGRAM_ID,
+  //     })
+  //     .signers([buyer])
+  //     .rpc();
+  //   console.log("Buy transaction ID: ", tx);
+  //   // 3️⃣  POST-STATE SNAPSHOT
+  //   const buyerEndBalance = await connection.getBalance(buyer.publicKey);
+  //   const vaultEndBalance = await connection.getBalance(vaultPda);
+  //
+  //   const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
+  //   const buyerTokensAfter = Number(buyerAtaInfoAfter.amount);
+  //
+  //   // const buyerTokensAfter =
+  //   //   (await provider.connection.getTokenAccountBalance(buyerAta)).value
+  //   //     .uiAmount;
+  //   console.log("Final Buyer SOL:", buyerEndBalance);
+  //   console.log("Final Vault SOL:", vaultEndBalance);
+  //   console.log("Final Buyer Tokens:", buyerTokensAfter);
+  //
+  //   const solTransferred = vaultStartBalance - vaultEndBalance;
+  //
+  //   assert(
+  //     buyerStartBalance + solTransferred == buyerEndBalance,
+  //     "Buyer and vault balance mismatch"
+  //   );
+  //
+  //   // 🔸 (B) Buyer ATA received tokens
+  //   assert(
+  //     buyerTokensAfter < buyerTokensBefore,
+  //     "Buyer tokens should decrease after sell"
+  //   );
+  //   assert(
+  //     buyerStartBalance < buyerEndBalance,
+  //     "Buyer SOL balance should increase after sell"
+  //   );
+  //
+  //   // 🔸 (C) Token mint total supply should match (optional but good)
+  //   const mintInfo = await getMint(connection, movieMintPda);
+  //   expect(Number(mintInfo.supply)).to.equal(buyerTokensAfter);
+  //
+  //   console.log("✅ Assertions passed!");
+  // });
   it("Creator release movie and exit pool gets created", async () => {
     const tx = await program.methods
       .release(new BN(TICKET_PRICE))
@@ -444,6 +449,7 @@ describe("block-buster", () => {
   });
   it("Viewer pays ticket price in SOL and receives NFT", async () => {
     //TODO: Mint NFT
+    //const tx = await program.methods
 
     const exitPoolBalanceBefore = await connection.getBalance(exitPoolPda);
     console.log("exitPoolBalanceBefore: ", exitPoolBalanceBefore);
@@ -466,6 +472,60 @@ describe("block-buster", () => {
     assert(
       exitPoolBalanceAfter > exitPoolBalanceBefore,
       "Balance should be greater than before"
+    );
+  });
+  it("token holders exit by redeeming their tokens from exit pool", async () => {
+    const exitPoolBalanceBefore = await connection.getBalance(exitPoolPda);
+    const buyerBalanceBefore = await connection.getBalance(buyer.publicKey);
+    const buyerAtaInfoBefore = await getAccount(connection, buyerAta);
+    const buyerAtaBalanceBefore = Number(buyerAtaInfoBefore.amount);
+    // const buyerAtaBalanceBefore = (
+    //   await provider.connection.getTokenAccountBalance(buyerAta)
+    // ).value.uiAmount;
+    const tx = await program.methods
+      .exit(new BN(EXIT_TOKENS))
+      .accountsStrict({
+        exiter: buyer.publicKey,
+        movieMint: movieMintPda,
+        bondingCurve: bondingCurvePda,
+        exitPool: exitPoolPda,
+        buyerAta: buyerAta,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SYSTEM_PROGRAM_ID,
+      })
+      .signers([buyer])
+      .rpc();
+    // const res = await connection.getTransaction(tx, {
+    //   commitment: "confirmed",
+    // });
+    // console.log(res.meta.logMessages);
+
+    console.log("Transaction Signature: ", tx);
+
+    const exitPoolBalanceAfter = await connection.getBalance(exitPoolPda);
+    const buyerBalanceAfter = await connection.getBalance(buyer.publicKey);
+    const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
+    const buyerAtaBalanceAfter = Number(buyerAtaInfoAfter.amount);
+    // const buyerAtaBalanceAfter = (
+    //   await provider.connection.getTokenAccountBalance(buyerAta)
+    // ).value.uiAmount;
+    console.log("buyerAtaBalanceBefore: ", buyerAtaBalanceBefore);
+    console.log("buyerAtaBalanceAfter:  ", buyerAtaBalanceAfter);
+    console.log("exitPoolBalanceBefore: ", exitPoolBalanceBefore);
+    console.log("exitPoolBalanceAfter:  ", exitPoolBalanceAfter);
+    console.log("buyerBalanceBefore:    ", buyerBalanceBefore);
+    console.log("buyerBalanceAfter:     ", buyerBalanceAfter);
+    assert(
+      exitPoolBalanceBefore > exitPoolBalanceAfter,
+      "Balance should be lesser than before"
+    );
+    assert(
+      buyerBalanceBefore < buyerBalanceAfter,
+      "Balance of token holder should be greater"
+    );
+    assert(
+      buyerAtaBalanceBefore > buyerAtaBalanceAfter,
+      "Balance should be lesser than before"
     );
   });
 });

@@ -59,4 +59,7 @@ pub mod block_buster {
     pub fn watch(ctx: Context<Watch>) -> Result<()> {
         ctx.accounts.watch(&ctx.bumps)
     }
+    pub fn exit(ctx: Context<Exit>, amount_in_tokens: u64) -> Result<()> {
+        ctx.accounts.exit(amount_in_tokens, &ctx.bumps)
+    }
 }
