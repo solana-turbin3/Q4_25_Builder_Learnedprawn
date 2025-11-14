@@ -49,26 +49,17 @@ pub struct Exit<'info> {
 
 impl<'info> Exit<'info> {
     pub fn exit(&mut self, amount_in_tokens: u64, bumps: &ExitBumps) -> Result<()> {
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            CURVE,
-            &self.movie_mint.to_account_info().key.as_ref(),
-            &[bumps.bonding_curve],
-        ]];
-
         let burn_accounts = Burn {
             authority: self.exiter.to_account_info(),
             mint: self.movie_mint.to_account_info(),
             from: self.buyer_ata.to_account_info(),
         };
 
-        let burn_context = CpiContext::new_with_signer(
-            self.token_program.to_account_info(),
-            burn_accounts,
-            signer_seeds,
-        );
+        let burn_context = CpiContext::new(self.token_program.to_account_info(), burn_accounts);
 
         //TODO: decimal precision
         burn(burn_context, amount_in_tokens)?;
+
         let cpi_program = self.system_program.to_account_info();
         let cpi_accounts = Transfer {
             from: self.exit_pool.to_account_info(),
@@ -77,5 +68,27 @@ impl<'info> Exit<'info> {
         let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
         transfer(cpi_context, self.bonding_curve.ticket_price)?;
         Ok(())
+    }
+
+    pub fn calculate_exit_sol(&mut self, amount_in_tokens: u64) -> Result<u64> {
+        // let exit_pool_lamports = self.exit_pool.lamports(); // 10^9
+        // let movie_mint_supply = self.movie_mint.supply; //10^6
+        // let movie_mint_decimals = self.movie_mint.decimals; //10^6
+        // let lamports_per_token = (exit_pool_lamports as u128
+        //     * 10u128.pow(movie_mint_decimals as u32))
+        //     / movie_mint_supply as u128;
+        // let lamports_per_token = (self.exit_pool.lamports() as u128)
+        //     .checked_mul(10u128.pow(self.movie_mint.decimals as u32))
+        //     .ok_or(BlockBusterError::Overflow)?
+        //     .checked_div(self.movie_mint.supply as u128)
+        //     .ok_or(BlockBusterError::Overflow)?;
+        // Ok((lamports_per_token * (amount_in_tokens as u128)) as u64)
+        Ok(((self.exit_pool.lamports() as u128)
+            .checked_mul(10u128.pow(self.movie_mint.decimals as u32))
+            .ok_or(BlockBusterError::Overflow)?
+            .checked_div(self.movie_mint.supply as u128)
+            .ok_or(BlockBusterError::Overflow)?)
+        .checked_mul(amount_in_tokens as u128)
+        .ok_or(BlockBusterError::Overflow)? as u64)
     }
 }
