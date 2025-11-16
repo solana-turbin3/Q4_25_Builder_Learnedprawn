@@ -8,11 +8,15 @@ skip-lint = false
 [programs.localnet]
 block_buster = "BN61uwvvUDGr9RwdHt5MNxT3ci4VNVxiC9Uxh5zdVU7X"
 
+[programs.devnet]
+block_buster = "BN61uwvvUDGr9RwdHt5MNxT3ci4VNVxiC9Uxh5zdVU7X"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "localnet"
+# cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

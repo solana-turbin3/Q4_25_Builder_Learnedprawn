@@ -3,10 +3,18 @@
 3. Use metadata to store name and uri maybe.
 4. Add threshold reached mechanisms for release, watch and timelock mechanism.
 5. change the "extra rent"
+6. liteSVM testing?
 
 
 add collection to tickets?
 
 IMP:
-1. Make Initial price and slop variable.
+1. Make Initial price and slope variable.
 
+
+Remaining:
+NFT minting
+timelocks
+1. Make Initial price and slope variable.
+devnet deployment
+more testing for price movements

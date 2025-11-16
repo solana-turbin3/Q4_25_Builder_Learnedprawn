@@ -56,8 +56,9 @@ pub mod block_buster {
     pub fn release(ctx: Context<Release>, ticket_price: u64) -> Result<()> {
         ctx.accounts.release(ticket_price, &ctx.bumps)
     }
-    pub fn watch(ctx: Context<Watch>) -> Result<()> {
-        ctx.accounts.watch(&ctx.bumps)
+    pub fn watch(ctx: Context<Watch>, args: TicketNftArgs) -> Result<()> {
+        ctx.accounts.watch(&ctx.bumps)?;
+        ctx.accounts.mint_nft_ticket(args, &ctx.bumps)
     }
     pub fn exit(ctx: Context<Exit>, amount_in_tokens: u64) -> Result<()> {
         ctx.accounts.exit(amount_in_tokens, &ctx.bumps)

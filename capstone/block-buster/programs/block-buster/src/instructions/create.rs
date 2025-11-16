@@ -22,7 +22,7 @@ pub struct Create<'info> {
         init,
         payer = creator,
         seeds = [MINT.as_ref(), name.as_bytes().as_ref(), creator.key().as_ref() ],
-        mint::decimals = 6,
+        mint::decimals = 0,
         mint::authority = bonding_curve,
         bump
     )]
