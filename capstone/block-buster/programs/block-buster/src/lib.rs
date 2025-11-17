@@ -9,7 +9,7 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("BN61uwvvUDGr9RwdHt5MNxT3ci4VNVxiC9Uxh5zdVU7X");
+declare_id!("8uDndoDUtLqD3fhiZdKk9HAuQd3dVcbEkPNYS68iq5rZ");
 
 #[program]
 pub mod block_buster {

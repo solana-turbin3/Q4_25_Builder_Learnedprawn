@@ -22,7 +22,7 @@ import { BN } from "bn.js";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
 import { fetchAsset } from "@metaplex-foundation/mpl-core";
-import { string } from "@metaplex-foundation/umi/serializers";
+import { Umi } from "@metaplex-foundation/umi";
 
 describe("block-buster", () => {
   // Configure the client to use the local cluster.
@@ -31,11 +31,21 @@ describe("block-buster", () => {
 
   const program = anchor.workspace.blockBuster as Program<BlockBuster>;
   const connection = provider.connection;
-  const umi = createUmi("http://localhost:8899").use(mplCore());
+
+  let localnet = provider.connection.rpcEndpoint == "http://127.0.0.1:8899";
+
+  let umi: Umi;
+  if (localnet) {
+    umi = createUmi("http://localhost:8899").use(mplCore());
+  } else {
+    umi = createUmi(
+      "https://turbine-solanad-4cde.devnet.rpcpool.com/9a9da9cf-6db1-47dc-839a-55aca5c9c80a"
+    ).use(mplCore());
+  }
 
   const feeBasisPoints = 0;
 
-  const MINT_DECIMAL_PRECISION = 10 ** 6;
+  // const MINT_DECIMAL_PRECISION = 10 ** 6;
 
   // const INITIAL_BUY_AMOUNT = 10 * MINT_DECIMAL_PRECISION; //  this is 10 tokens 1 SOL = 1000 Tokens (hardcoded initial value and slope) therefore
   const INITIAL_BUY_AMOUNT = 10;
@@ -51,7 +61,6 @@ describe("block-buster", () => {
   const admin = provider.wallet;
   console.log("Admin: ", admin.publicKey.toString());
 
-  let localnet = provider.connection.rpcEndpoint == "http://127.0.0.1:8899";
   let newAdmin: Keypair;
   let creator: Keypair;
   let viewer: Keypair;
@@ -118,13 +127,7 @@ describe("block-buster", () => {
     ]);
     buyer2 = Keypair.fromSecretKey(secretKeyBytes);
 
-    secretKeyBytes = Buffer.from([
-      214, 58, 5, 57, 250, 118, 231, 239, 147, 89, 1, 245, 223, 194, 228, 149,
-      39, 69, 69, 61, 243, 130, 125, 171, 158, 124, 237, 160, 149, 211, 29, 2,
-      109, 32, 120, 52, 110, 132, 75, 67, 122, 152, 107, 129, 254, 125, 22, 145,
-      162, 151, 52, 246, 246, 60, 75, 192, 144, 15, 60, 134, 128, 53, 241, 1,
-    ]);
-    asset = Keypair.fromSecretKey(secretKeyBytes);
+    asset = Keypair.generate();
   }
 
   const name = "test";
@@ -214,27 +217,27 @@ describe("block-buster", () => {
           SystemProgram.transfer({
             fromPubkey: admin.publicKey,
             toPubkey: newAdmin.publicKey,
-            lamports: 100_000_000,
+            lamports: 50_000_000,
           }),
           SystemProgram.transfer({
             fromPubkey: admin.publicKey,
             toPubkey: creator.publicKey,
-            lamports: 100_000_000,
+            lamports: 50_000_000,
           }),
           SystemProgram.transfer({
             fromPubkey: admin.publicKey,
             toPubkey: buyer.publicKey,
-            lamports: 100_000_000,
+            lamports: 50_000_000,
           }),
           SystemProgram.transfer({
             fromPubkey: admin.publicKey,
             toPubkey: buyer2.publicKey,
-            lamports: 100_000_000,
+            lamports: 50_000_000,
           }),
           SystemProgram.transfer({
             fromPubkey: admin.publicKey,
             toPubkey: viewer.publicKey,
-            lamports: 100_000_000,
+            lamports: 50_000_000,
           })
         ),
         [admin.payer]
@@ -710,6 +713,7 @@ describe("block-buster", () => {
       "Balance should be greater than before"
     );
 
+    await new Promise((resolve) => setTimeout(resolve, 10000));
     const assetAccount = await fetchAsset(umi, asset.publicKey.toString());
     console.log("assetAccount: ", assetAccount);
     console.log("assetAccount name: ", assetAccount.name);
