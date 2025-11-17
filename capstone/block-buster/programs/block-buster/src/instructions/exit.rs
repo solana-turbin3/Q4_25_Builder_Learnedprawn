@@ -16,7 +16,7 @@ pub struct Exit<'info> {
 
     #[account(
         mut,
-        seeds = [MINT.as_ref(), bonding_curve.name.as_bytes().as_ref(), bonding_curve.initializer.key().as_ref() ],
+        seeds = [MINT.as_ref(),  bonding_curve.initializer.key().as_ref()],
         mint::decimals = 0,
         mint::authority = bonding_curve,
         bump

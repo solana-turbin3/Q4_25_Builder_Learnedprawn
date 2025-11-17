@@ -13,7 +13,6 @@ use crate::{
 };
 
 #[derive(Accounts)]
-#[instruction(name: String)]
 pub struct Create<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
@@ -21,7 +20,7 @@ pub struct Create<'info> {
     #[account(
         init,
         payer = creator,
-        seeds = [MINT.as_ref(), name.as_bytes().as_ref(), creator.key().as_ref() ],
+        seeds = [MINT.as_ref(), creator.key().as_ref()],
         mint::decimals = 0,
         mint::authority = bonding_curve,
         bump
@@ -44,13 +43,6 @@ pub struct Create<'info> {
     )]
     pub vault: SystemAccount<'info>,
 
-    // #[account(
-    //     init,
-    //     payer = creator,
-    //     associated_token::mint = movie_mint,
-    //     associated_token::authority = bonding_curve
-    // )]
-    // pub bonding_curve_ata: Account<'info, TokenAccount>,
     #[account(
         seeds = [SETTINGS.as_ref()],
         bump = settings.bump,
@@ -58,7 +50,6 @@ pub struct Create<'info> {
     )]
     pub settings: Account<'info, Settings>,
 
-    // pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
@@ -66,14 +57,15 @@ pub struct Create<'info> {
 impl<'info> Create<'info> {
     pub fn create(
         &mut self,
-        name: String,
-        symbol: String,
-        uri: String,
+        // name: String,
+        // symbol: String,
+        // uri: String,
         initializer_share: u64,
         total_fundraising: u64,
+        slope: u64,
+        initial_price: u64,
         bumps: &CreateBumps,
     ) -> Result<()> {
-        // TODO: what about + 10000??
         let rent_exempt: u64 =
             Rent::get()?.minimum_balance(self.vault.to_account_info().data_len());
         let cpi_program = self.system_program.to_account_info();
@@ -85,19 +77,19 @@ impl<'info> Create<'info> {
         transfer(cpi_context, rent_exempt + 10000)?;
         self.bonding_curve.set_inner(BondingCurve {
             mint: self.movie_mint.key(),
-            name,
-            symbol,
-            uri,
+            // name,
+            // symbol,
+            // uri,
             completion_lamports: total_fundraising,
             token_reserve: 0,
-            sol_reserve: 0,
-            total_token_supply: self.settings.supply,
             complete: false,
             initializer: self.creator.key(),
             initializer_share,
             ticket_price: 0,
-            curve_bump: self.bonding_curve.curve_bump,
-            vault_bump: self.bonding_curve.vault_bump,
+            slope,
+            initial_price,
+            curve_bump: bumps.bonding_curve,
+            vault_bump: bumps.vault,
         });
 
         Ok(())

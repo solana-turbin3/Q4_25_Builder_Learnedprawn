@@ -8,7 +8,7 @@ use anchor_spl::{
 };
 
 use crate::{
-    bonding_curve, error::BlockBusterError, state::Settings, BondingCurve, CURVE,  INITIAL_PRICE, MINT, SETTINGS, SLOPE, SUPPLY, VAULT_CURVE
+    bonding_curve, error::BlockBusterError, state::Settings, BondingCurve, CURVE,   MINT, SETTINGS,  SUPPLY, VAULT_CURVE
 };
 
 #[derive(Accounts)]
@@ -18,7 +18,7 @@ pub struct Sell<'info> {
 
     #[account(
         mut,
-        seeds = [MINT.as_ref(), bonding_curve.name.as_bytes().as_ref(), bonding_curve.initializer.key().as_ref() ],
+        seeds = [MINT.as_ref(),  bonding_curve.initializer.key().as_ref()],
         mint::decimals = 0,
         mint::authority = bonding_curve,
         bump
@@ -114,8 +114,8 @@ impl<'info> Sell<'info> {
     amount: u64,
     ) -> Result<u64> {
     let amount = amount as u128;
-    let base_price = INITIAL_PRICE;
-    let slope = SLOPE;
+    let base_price = self.bonding_curve.initial_price as u128;
+    let slope = self.bonding_curve.slope as u128;
     // let supply = (self.movie_mint.supply as u128).checked_sub(amount).ok_or(BlockBusterError::Overflow)?;
     let supply = self.bonding_curve.token_reserve as u128;
     let scale = 10u128.pow(self.movie_mint.decimals as u32);

@@ -47,6 +47,8 @@ describe("block-buster", () => {
 
   // const MINT_DECIMAL_PRECISION = 10 ** 6;
 
+  const CREATOR_SHARE = 10;
+
   const FUNDRAISING_GOAL = 1 * LAMPORTS_PER_SOL;
 
   const INITIAL_BUY_AMOUNT = 100;
@@ -56,6 +58,11 @@ describe("block-buster", () => {
   const TICKET_PRICE = 0.01 * LAMPORTS_PER_SOL; // 0.01 SOL
 
   const EXIT_TOKENS = 1;
+
+  const INITIAL_PRICE = 1_000_000; //0.001SOL = 1 Token | 1_000_000 lamports == 0.001SOL
+
+  //This means for each token minted cost of next token will increase by 0.0001SOL
+  const SLOPE = 100_000; //0.0001SOL
 
   const admin = provider.wallet;
   console.log("Admin: ", admin.publicKey.toString());
@@ -130,8 +137,8 @@ describe("block-buster", () => {
   }
 
   const name = "test";
-  const symbol = "TEST";
-  const uri = "uri";
+  // const symbol = "TEST";
+  // const uri = "uri";
 
   let settingsPda: PublicKey;
   let movieMintPda: PublicKey;
@@ -150,8 +157,8 @@ describe("block-buster", () => {
     console.log("Settings PDA: ", settingsPda.toString());
 
     movieMintPda = PublicKey.findProgramAddressSync(
-      // seeds = [MINT.as_ref(), name.as_bytes().as_ref(), creator.key().as_ref() ],
-      [Buffer.from("mint"), Buffer.from(name), creator.publicKey.toBuffer()],
+      // seeds = [MINT.as_ref(),  creator.key().as_ref() ],
+      [Buffer.from("mint"), creator.publicKey.toBuffer()],
       program.programId
     )[0];
     console.log("Movie Mint PDA: ", movieMintPda.toString());
@@ -297,7 +304,12 @@ describe("block-buster", () => {
   });
   it("Create Token Mint and initialize bonding curve values", async () => {
     const tx = await program.methods
-      .create(name, symbol, uri, new BN(10), new BN(FUNDRAISING_GOAL))
+      .create(
+        new BN(CREATOR_SHARE),
+        new BN(FUNDRAISING_GOAL),
+        new BN(SLOPE),
+        new BN(INITIAL_PRICE)
+      )
       .accountsStrict({
         creator: creator.publicKey,
         movieMint: movieMintPda,
@@ -338,9 +350,9 @@ describe("block-buster", () => {
     assert.equal(movieMintAccount.decimals, 0, "Mint should have 0 decimals");
     assert.equal(bondingCurve.complete, false);
     // State fields
-    assert.ok(bondingCurve.name === name, "Incorrect name");
-    assert.ok(bondingCurve.symbol === symbol, "Incorrect symbol");
-    assert.ok(bondingCurve.uri === uri, "Incorrect URI");
+    // assert.ok(bondingCurve.name === name, "Incorrect name");
+    // assert.ok(bondingCurve.symbol === symbol, "Incorrect symbol");
+    // assert.ok(bondingCurve.uri === uri, "Incorrect URI");
 
     // Initial flags
     assert.equal(
@@ -350,7 +362,6 @@ describe("block-buster", () => {
     );
 
     // Reserves
-    assert.equal(Number(bondingCurve.solReserve), 0, "SOL reserve should be 0");
     assert.equal(
       Number(bondingCurve.tokenReserve),
       0,

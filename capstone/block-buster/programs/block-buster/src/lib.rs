@@ -32,18 +32,22 @@ pub mod block_buster {
 
     pub fn create(
         ctx: Context<Create>,
-        name: String,
-        symbol: String,
-        uri: String,
+        // name: String,
+        // symbol: String,
+        // uri: String,
         initializer_share: u64,
         total_fundraising: u64,
+        slope: u64,
+        initial_price: u64,
     ) -> Result<()> {
         ctx.accounts.create(
-            name,
-            symbol,
-            uri,
+            // name,
+            // symbol,
+            // uri,
             initializer_share,
             total_fundraising,
+            slope,
+            initial_price,
             &ctx.bumps,
         )
     }
