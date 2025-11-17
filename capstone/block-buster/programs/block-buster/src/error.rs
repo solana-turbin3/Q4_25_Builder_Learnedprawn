@@ -6,6 +6,8 @@ pub enum BlockBusterError {
     NotAdmin,
     #[msg("Program Paused")]
     Paused,
+    #[msg("Fundraising target complete")]
+    Complete,
     #[msg("Overflow")]
     Overflow,
     #[msg("Invalid Collection")]

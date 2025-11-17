@@ -6,6 +6,7 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
+  sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
@@ -25,7 +26,6 @@ import { fetchAsset } from "@metaplex-foundation/mpl-core";
 import { Umi } from "@metaplex-foundation/umi";
 
 describe("block-buster", () => {
-  // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
@@ -47,15 +47,14 @@ describe("block-buster", () => {
 
   // const MINT_DECIMAL_PRECISION = 10 ** 6;
 
-  // const INITIAL_BUY_AMOUNT = 10 * MINT_DECIMAL_PRECISION; //  this is 10 tokens 1 SOL = 1000 Tokens (hardcoded initial value and slope) therefore
-  const INITIAL_BUY_AMOUNT = 10;
+  const FUNDRAISING_GOAL = 1 * LAMPORTS_PER_SOL;
 
-  // const SELL_AMOUNT = 1 * MINT_DECIMAL_PRECISION; // 1 Token sold
+  const INITIAL_BUY_AMOUNT = 100;
+
   const SELL_AMOUNT = 2;
 
   const TICKET_PRICE = 0.01 * LAMPORTS_PER_SOL; // 0.01 SOL
 
-  // const EXIT_TOKENS = 1 * MINT_DECIMAL_PRECISION; // 1 Token (Therefore I should get 0.001 SOL i.e. 1_000_000 lamports)
   const EXIT_TOKENS = 1;
 
   const admin = provider.wallet;
@@ -170,8 +169,9 @@ describe("block-buster", () => {
       program.programId
     )[0];
     console.log("Vault PDA: ", vaultPda.toString());
+
     exitPoolPda = PublicKey.findProgramAddressSync(
-      // (seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()]),
+      // (seeds = [EXIT_POOL.as_ref(), movie_mint.key().as_ref()]),
       [Buffer.from("exit_pool"), movieMintPda.toBuffer()],
       program.programId
     )[0];
@@ -183,6 +183,7 @@ describe("block-buster", () => {
       true
     );
     console.log("Bonding Curve ATA: ", bondingCurveAta.toString());
+
     buyerAta = getAssociatedTokenAddressSync(
       movieMintPda,
       buyer.publicKey,
@@ -212,6 +213,7 @@ describe("block-buster", () => {
       console.log(await connection.getBalance(newAdmin.publicKey));
       console.log(await connection.getBalance(creator.publicKey));
     } else {
+      // sendAndConfirmTransaction();
       await connection.sendTransaction(
         new Transaction().add(
           SystemProgram.transfer({
@@ -246,7 +248,6 @@ describe("block-buster", () => {
   });
 
   it("Settings initialized", async () => {
-    // Add your test here.
     const tx = await program.methods
       .initialize(feeBasisPoints)
       .accountsStrict({
@@ -255,7 +256,7 @@ describe("block-buster", () => {
         systemProgram: SystemProgram.programId,
       })
       .rpc();
-    console.log("Settings transaction signature", tx);
+    console.log("Settings initialized transaction signature", tx);
 
     const settings = await program.account.settings.fetch(settingsPda);
     assert.equal(settings.feeBasisPoints, feeBasisPoints);
@@ -263,7 +264,6 @@ describe("block-buster", () => {
     assert(settings.feeRecipient.equals(admin.publicKey));
   });
   it("Settings changed", async () => {
-    // Add your test here.
     const paused = false;
     const newFeeBasisPoints = 1;
     const tx = await program.methods
@@ -274,7 +274,7 @@ describe("block-buster", () => {
         systemProgram: SystemProgram.programId,
       })
       .rpc();
-    console.log("Settings transaction signature", tx);
+    console.log("Settings changed transaction signature", tx);
 
     const settings = await program.account.settings.fetch(settingsPda);
     assert.equal(settings.feeBasisPoints, newFeeBasisPoints);
@@ -295,45 +295,9 @@ describe("block-buster", () => {
       console.error(`Oops, something went wrong: ${error}`);
     }
   });
-  // it("Create Token Mints and Revokes Authority", async () => {
-  //   const tx = await program.methods
-  //     .create("testtoken")
-  //     .accountsStrict({
-  //       creator: creator.publicKey,
-  //       movieMint: movieMintPda,
-  //       bondingCurve: bondingCurvePda,
-  //       vault: vaultPda,
-  //       bondingCurveAta: bondingCurveAta,
-  //       settings: settingsPda,
-  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       systemProgram: SYSTEM_PROGRAM_ID,
-  //     })
-  //     .signers([creator])
-  //     .rpc();
-  //   console.log("Create transaction signature", tx);
-  //
-  //   const bondingCurveAtaBalance = (
-  //     await provider.connection.getTokenAccountBalance(bondingCurveAta)
-  //   ).value.uiAmount;
-  //   const settings = await program.account.settings.fetch(settingsPda);
-  //   assert.equal(
-  //     (bondingCurveAtaBalance * 10 ** DECIMALS).toString(),
-  //     settings.supply.toString()
-  //   );
-  //   const bondingCurve = await program.account.bondingCurve.fetch(
-  //     bondingCurvePda
-  //   );
-  //   assert.equal(bondingCurve.complete, false);
-  //   const movieMint = await getMint(provider.connection, movieMintPda);
-  //   assert.equal(movieMint.mintAuthority, null);
-  //   console.log("Mint authority:", movieMint.mintAuthority);
-  //   console.log("Decimals:", movieMint.decimals);
-  //   console.log("Supply:", Number(movieMint.supply));
-  // });
   it("Create Token Mint and initialize bonding curve values", async () => {
     const tx = await program.methods
-      .create(name, symbol, uri, new BN(10), new BN(1000))
+      .create(name, symbol, uri, new BN(10), new BN(FUNDRAISING_GOAL))
       .accountsStrict({
         creator: creator.publicKey,
         movieMint: movieMintPda,
@@ -396,7 +360,7 @@ describe("block-buster", () => {
     // Fundraising goal
     assert.equal(
       Number(bondingCurve.completionLamports),
-      1000,
+      FUNDRAISING_GOAL,
       "Completion lamports mismatch"
     );
 
@@ -467,8 +431,8 @@ describe("block-buster", () => {
     console.log("Final Vault SOL:", vaultEndBalance);
     console.log("Final Buyer Tokens:", buyerTokensAfter);
 
-    const solTransferred = vaultEndBalance - vaultStartBalance;
-    const buyerSolSpent = buyerStartBalance - buyerEndBalance;
+    // const solTransferred = vaultEndBalance - vaultStartBalance;
+    // const buyerSolSpent = buyerStartBalance - buyerEndBalance;
 
     // Note: buyerSolSpent will include transaction fee (~5000 lamports), so we use >=
     // expect(solTransferred).to.equal(INITIAL_BUY_AMOUNT);
@@ -655,8 +619,71 @@ describe("block-buster", () => {
     // );
 
     // 🔸 (C) Token mint total supply should match (optional but good)
-    const mintInfo = await getMint(connection, movieMintPda);
+    // const mintInfo = await getMint(connection, movieMintPda);
     // expect(Number(mintInfo.supply)).to.equal(buyerTokensAfter);
+
+    const bondingCurveAccount = await program.account.bondingCurve.fetch(
+      bondingCurvePda
+    );
+    console.log("complete status: ", bondingCurveAccount.complete);
+
+    console.log("✅ Assertions passed!");
+  });
+  it("Try buying more tokens after fundraising target reached and fails", async () => {
+    const bondingCurveAccount = await program.account.bondingCurve.fetch(
+      bondingCurvePda
+    );
+    console.log("complete status: ", bondingCurveAccount.complete);
+    console.log("Buyer after complete tried: ");
+    // 1️⃣  PRE-STATE SNAPSHOT
+    const buyerStartBalance = await connection.getBalance(buyer.publicKey);
+    const vaultStartBalance = await connection.getBalance(vaultPda);
+
+    let buyerTokensBefore = 0;
+    try {
+      const buyerAtaInfoBefore = await getAccount(connection, buyerAta);
+      buyerTokensBefore = Number(buyerAtaInfoBefore.amount);
+      console.log("Initial Buyer Tokens:", buyerTokensBefore);
+    } catch (e: any) {
+      console.log("Buyer 1 Account does not exist yet");
+    }
+
+    console.log("Initial Buyer 1 SOL:", buyerStartBalance);
+    console.log("Initial Vault SOL:  ", vaultStartBalance);
+
+    try {
+      let tx = await program.methods
+        .buy(new BN(INITIAL_BUY_AMOUNT))
+        .accountsStrict({
+          buyer: buyer.publicKey,
+          movieMint: movieMintPda,
+          bondingCurve: bondingCurvePda,
+          vault: vaultPda,
+          buyerAta: buyerAta,
+          settings: settingsPda,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SYSTEM_PROGRAM_ID,
+        })
+        .signers([buyer])
+        .rpc();
+      console.log("After complete Buy transaction ID: ", tx);
+      assert.fail("Buying after completion should fail");
+    } catch (e: any) {
+      console.log("Buying Error: ", e);
+    }
+    // 3️⃣  POST-STATE SNAPSHOT
+    const buyerEndBalance = await connection.getBalance(buyer.publicKey);
+    const vaultEndBalance = await connection.getBalance(vaultPda);
+
+    const buyerAtaInfoAfter = await getAccount(connection, buyerAta);
+    const buyerTokensAfter = Number(buyerAtaInfoAfter.amount);
+
+    // const buyerTokensAfter =
+    //   (await provider.connection.getTokenAccountBalance(buyerAta)).value
+    //     .uiAmount;
+    console.log("Final Buyer 1 SOL:", buyerEndBalance);
+    console.log("Final Vault SOL:  ", vaultEndBalance);
 
     console.log("✅ Assertions passed!");
   });

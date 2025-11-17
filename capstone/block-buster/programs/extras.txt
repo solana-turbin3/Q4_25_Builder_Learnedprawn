@@ -2,18 +2,18 @@
 2. Paused test.
 3. Use metadata to store name and uri maybe.
 4. Add threshold reached mechanisms for release, watch and timelock mechanism.
-5. change the "extra rent"
-6. liteSVM testing?
+5. liteSVM testing?
+6. add fees
 
 
 add collection to tickets?
 
 IMP:
 1. Make Initial price and slope variable.
+2. Add more negative path tests.
 
 
 Remaining:
-NFT minting
 timelocks
 1. Make Initial price and slope variable.
 devnet deployment

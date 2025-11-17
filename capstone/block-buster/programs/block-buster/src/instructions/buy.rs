@@ -28,7 +28,8 @@ pub struct Buy<'info> {
     #[account(
         mut,
         seeds = [CURVE.as_ref(), movie_mint.key().as_ref()],
-        bump
+        bump,
+        constraint = !bonding_curve.complete @ BlockBusterError::Complete,
     )]
     pub bonding_curve: Account<'info, BondingCurve>,
 
@@ -49,7 +50,7 @@ pub struct Buy<'info> {
     #[account(
         seeds = [SETTINGS.as_ref()],
         bump = settings.bump,
-        constraint = !settings.paused @ BlockBusterError::Paused
+        constraint = !settings.paused @ BlockBusterError::Paused,
     )]
     pub settings: Account<'info, Settings>,
 
@@ -94,7 +95,11 @@ impl<'info> Buy<'info> {
 
         //TODO: decimal precision
         mint_to(mint_context, amount_in_tokens)?;
+
         self.bonding_curve.token_reserve += amount_in_tokens;
+        if self.vault.lamports() >= self.bonding_curve.completion_lamports {
+            self.bonding_curve.complete = true;
+        }
 
         Ok(())
     }
