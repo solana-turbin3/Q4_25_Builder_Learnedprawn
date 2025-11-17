@@ -713,7 +713,9 @@ describe("block-buster", () => {
       "Balance should be greater than before"
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 10000));
+    if (!localnet) {
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+    }
     const assetAccount = await fetchAsset(umi, asset.publicKey.toString());
     console.log("assetAccount: ", assetAccount);
     console.log("assetAccount name: ", assetAccount.name);

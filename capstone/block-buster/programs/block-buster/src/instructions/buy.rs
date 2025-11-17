@@ -137,7 +137,11 @@ impl<'info> Buy<'info> {
         msg!("base_price: {}", base_price);
         msg!("slope: {}", slope);
         msg!("supply: {}", supply);
-        let buy_lamports = (slope  * ((supply + amount).pow(2) - supply.pow(2))) / 2  + base_price * amount;
+        let old_buy_lamports = (slope  * ((supply + amount).pow(2) - supply.pow(2))) / 2  + base_price * amount;
+        msg!("old_buy_lamports: {}", old_buy_lamports);
+
+        let buy_lamports = slope.checked_mul(supply.checked_add(amount).ok_or(BlockBusterError::Overflow)?.pow(2).checked_sub(supply.pow(2)).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?.checked_div(2).ok_or(BlockBusterError::Overflow)?.checked_add(base_price.checked_mul(amount).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?;
+        msg!("buy_lamports: {}", buy_lamports);
     // let price = base_price
     //     .checked_add(slope.checked_mul(supply.checked_add(amount).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?)
     //     .ok_or(BlockBusterError::Overflow)?;

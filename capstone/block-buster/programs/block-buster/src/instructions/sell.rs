@@ -129,7 +129,11 @@ impl<'info> Sell<'info> {
         msg!("base_price: {}", base_price);
         msg!("slope: {}", slope);
         msg!("supply: {}", supply);
-        let refund_lamports = (slope  * (supply.pow(2) - (supply - amount).pow(2))) / 2  + base_price * amount;
+        let old_refund_lamports = (slope  * (supply.pow(2) - (supply - amount).pow(2))) / 2  + base_price * amount;
+        msg!("old_lamports: {}", old_refund_lamports);
+        // refund_lamports = slope.checked_mul(supply.pow(2).checked_sub((supply.checked_sub(amount).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?.pow(2))).ok_or(BlockBusterError::Overflow)?;
+        let refund_lamports = slope.checked_mul(supply.pow(2).checked_sub(supply.checked_sub(amount).ok_or(BlockBusterError::Overflow)?.pow(2)).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?.checked_div(2).ok_or(BlockBusterError::Overflow)?.checked_add(base_price.checked_mul(amount).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?;
+        msg!("new_refund_lamports: {}", refund_lamports);
 
 
     // let price = base_price
