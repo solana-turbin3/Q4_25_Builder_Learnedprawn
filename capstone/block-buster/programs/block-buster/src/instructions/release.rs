@@ -25,7 +25,8 @@ pub struct Release<'info> {
     #[account(
         mut,
         seeds = [CURVE.as_ref(), movie_mint.key().as_ref()],
-        bump
+        bump,
+        constraint = bonding_curve.complete @ BlockBusterError::Complete
     )]
     pub bonding_curve: Account<'info, BondingCurve>,
 
