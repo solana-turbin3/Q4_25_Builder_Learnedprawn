@@ -397,6 +397,57 @@ describe("block-buster", () => {
       await connection.getBalanceAndContext(vaultPda)
     );
   });
+  it("Paused testing", async () => {
+    const tx1 = await program.methods
+      .togglePause()
+      .accountsStrict({
+        admin: newAdmin.publicKey,
+        settings: settingsPda,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([newAdmin])
+      .rpc();
+    console.log("Toggle Paused transaction: ", tx1);
+    const settingsPaused = await program.account.settings.fetch(settingsPda);
+    assert(settingsPaused.paused);
+    try {
+      await program.methods
+        .buy(new BN(INITIAL_BUY_AMOUNT))
+        .accountsStrict({
+          buyer: buyer.publicKey,
+          movieMint: movieMintPda,
+          bondingCurve: bondingCurvePda,
+          vault: vaultPda,
+          buyerAta: buyerAta,
+          settings: settingsPda,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SYSTEM_PROGRAM_ID,
+        })
+        .signers([buyer])
+        .rpc();
+      assert.fail("transaction should fail as its paused");
+    } catch (e: any) {
+      console.log("Error paused: ", e);
+    }
+
+    //togglePause() signature is same so it is required that it be in a different blockhash to avoid the problem of double spending.
+    //Another solution is to add a instruction of transfer of very small amount (1 lamport to differentiate the instruction.)
+    await new Promise((r) => setTimeout(r, 500));
+
+    const tx2 = await program.methods
+      .togglePause()
+      .accountsStrict({
+        admin: newAdmin.publicKey,
+        settings: settingsPda,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([newAdmin])
+      .rpc();
+    console.log("Toggle un-Paused transaction: ", tx2);
+    const settingsUnPaused = await program.account.settings.fetch(settingsPda);
+    assert(!settingsUnPaused.paused);
+  });
   it("Buyer buys token and transfers sol", async () => {
     // 1️⃣  PRE-STATE SNAPSHOT
     const buyerStartBalance = await connection.getBalance(buyer.publicKey);

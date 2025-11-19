@@ -51,6 +51,9 @@ pub mod block_buster {
             &ctx.bumps,
         )
     }
+    pub fn toggle_pause(ctx: Context<TogglePause>) -> Result<()> {
+        ctx.accounts.toggle_pause()
+    }
     pub fn buy(ctx: Context<Buy>, amount_in_sol: u64) -> Result<()> {
         ctx.accounts.buy(amount_in_sol, &ctx.bumps)
     }

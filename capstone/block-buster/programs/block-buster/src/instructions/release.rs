@@ -15,7 +15,7 @@ pub struct Release<'info> {
     pub creator: Signer<'info>,
 
     #[account(
-        seeds = [MINT.as_ref(),  creator.key().as_ref() ],
+        seeds = [MINT.as_ref(),  creator.key().as_ref()],
         mint::decimals = 0,
         mint::authority = bonding_curve,
         bump

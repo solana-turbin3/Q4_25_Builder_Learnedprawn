@@ -1,11 +1,11 @@
 1. Make authority and fee_recipient setable/optional and different.
-2. Paused test.
-3. Use metadata to store name and uri maybe.
 5. liteSVM testing?
-6. add fees
 
 IMP:
 1. Add more negative path tests.
+2. add fees
+3. Use metadata to store name and uri maybe.
+4. Paused test.
 
 
 Remaining:

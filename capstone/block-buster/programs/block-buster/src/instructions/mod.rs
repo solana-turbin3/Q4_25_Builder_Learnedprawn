@@ -5,6 +5,7 @@ pub mod initialize;
 pub mod release;
 pub mod sell;
 pub mod set_settings;
+pub mod toggle_pause;
 pub mod watch;
 
 pub use buy::*;
@@ -14,4 +15,5 @@ pub use initialize::*;
 pub use release::*;
 pub use sell::*;
 pub use set_settings::*;
+pub use toggle_pause::*;
 pub use watch::*;
