@@ -4,10 +4,14 @@ use anchor_lang::prelude::*;
 pub enum BlockBusterError {
     #[msg("Admin not authorised")]
     NotAdmin,
+    #[msg("Creator can only release movie")]
+    NotCreator,
     #[msg("Program Paused")]
     Paused,
     #[msg("Fundraising target complete")]
     Complete,
+    #[msg("Fundraising target not complete")]
+    NotComplete,
     #[msg("Overflow")]
     Overflow,
     #[msg("Invalid Collection")]

@@ -9,7 +9,7 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("8uDndoDUtLqD3fhiZdKk9HAuQd3dVcbEkPNYS68iq5rZ");
+declare_id!("EziYSqVF5YJC3p9YovfASETNEkbbUgHuyVSpRf5BM2mK");
 
 #[program]
 pub mod block_buster {
@@ -61,11 +61,11 @@ pub mod block_buster {
         ctx.accounts.sell(amount_in_sol, &ctx.bumps)
     }
     pub fn release(ctx: Context<Release>, ticket_price: u64) -> Result<()> {
-        ctx.accounts.release(ticket_price, &ctx.bumps)
+        ctx.accounts.release(ticket_price)
     }
     pub fn watch(ctx: Context<Watch>, args: TicketNftArgs) -> Result<()> {
-        ctx.accounts.watch(&ctx.bumps)?;
-        ctx.accounts.mint_nft_ticket(args, &ctx.bumps)
+        ctx.accounts.watch()?;
+        ctx.accounts.mint_nft_ticket(args)
     }
     pub fn exit(ctx: Context<Exit>, amount_in_tokens: u64) -> Result<()> {
         ctx.accounts.exit(amount_in_tokens, &ctx.bumps)

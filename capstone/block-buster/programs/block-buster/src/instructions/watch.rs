@@ -1,18 +1,11 @@
-use std::str::FromStr;
-
 use anchor_lang::{
     prelude::*,
     system_program::{transfer, Transfer},
 };
-use anchor_spl::token::{Mint, Token};
+use anchor_spl::token::Mint;
 
-use crate::{
-    error::BlockBusterError, state::Settings, BondingCurve, CURVE, EXIT_POOL, MINT, SETTINGS,
-    SUPPLY, VAULT_CURVE,
-};
-use mpl_core::{
-    accounts::BaseCollectionV1, instructions::CreateV2CpiBuilder, ID as CORE_PROGRAM_ID,
-};
+use crate::{error::BlockBusterError, BondingCurve, CURVE, EXIT_POOL, MINT};
+use mpl_core::{instructions::CreateV2CpiBuilder, ID as CORE_PROGRAM_ID};
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
 // pub struct CreateAssetArgs {
@@ -69,9 +62,8 @@ pub struct Watch<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// TODO: Mint NFT
 impl<'info> Watch<'info> {
-    pub fn watch(&mut self, bumps: &WatchBumps) -> Result<()> {
+    pub fn watch(&mut self) -> Result<()> {
         let cpi_program = self.system_program.to_account_info();
         let cpi_accounts = Transfer {
             from: self.viewer.to_account_info(),
@@ -83,18 +75,13 @@ impl<'info> Watch<'info> {
         Ok(())
     }
 
-    pub fn mint_nft_ticket(&mut self, args: TicketNftArgs, bumps: &WatchBumps) -> Result<()> {
+    pub fn mint_nft_ticket(&mut self, args: TicketNftArgs) -> Result<()> {
         let collection = match &self.collection {
             Some(collection) => Some(collection.to_account_info()),
             None => None,
         };
-        // let collection = &self.collection.take();
-        // clone() ??
-        // let collection = &self
-        //     .collection
-        //     .map(|collection| collection.to_account_info());
 
-        let something = CreateV2CpiBuilder::new(&self.core_program.to_account_info())
+        CreateV2CpiBuilder::new(&self.core_program.to_account_info())
             .asset(&self.asset.to_account_info())
             .collection(collection.as_ref())
             .authority(None)
@@ -105,7 +92,6 @@ impl<'info> Watch<'info> {
             .name(args.name)
             .uri(args.uri)
             .invoke()?;
-        msg!("something: {:?}", something);
 
         Ok(())
     }

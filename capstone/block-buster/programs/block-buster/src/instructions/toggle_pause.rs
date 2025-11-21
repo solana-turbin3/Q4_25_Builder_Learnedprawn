@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::BlockBusterError, state::Settings, SETTINGS, SUPPLY};
+use crate::{error::BlockBusterError, state::Settings, SETTINGS};
 
 #[derive(Accounts)]
 pub struct TogglePause<'info> {

@@ -4,11 +4,11 @@ use anchor_lang::{
 };
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
+    token::{mint_to,  Mint, MintTo,  Token, TokenAccount},
 };
 
 use crate::{
-    bonding_curve, error::BlockBusterError, state::Settings, BondingCurve, CURVE,  MINT, SETTINGS,  SUPPLY, VAULT_CURVE
+     error::BlockBusterError, state::Settings, BondingCurve, CURVE,  MINT, SETTINGS,   VAULT_CURVE
 };
 
 #[derive(Accounts)]
@@ -92,8 +92,6 @@ impl<'info> Buy<'info> {
             signer_seeds,
         );
 
-
-        //TODO: decimal precision
         mint_to(mint_context, amount_in_tokens)?;
 
         self.bonding_curve.token_reserve += amount_in_tokens;
@@ -119,7 +117,12 @@ impl<'info> Buy<'info> {
         // cost(s, k) = (m/2) * ((s+k)² - s²) + c*k
         // let old_buy_lamports = (slope  * ((supply + amount).pow(2) - supply.pow(2))) / 2  + base_price * amount;
 
-        let buy_lamports = slope.checked_mul(supply.checked_add(amount).ok_or(BlockBusterError::Overflow)?.pow(2).checked_sub(supply.pow(2)).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?.checked_div(2).ok_or(BlockBusterError::Overflow)?.checked_add(base_price.checked_mul(amount).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?;
+        let buy_lamports = slope.checked_mul(supply.checked_add(amount).ok_or(BlockBusterError::Overflow)?
+            .pow(2).checked_sub(supply.pow(2)).ok_or(BlockBusterError::Overflow)?)
+            .ok_or(BlockBusterError::Overflow)?
+            .checked_div(2).ok_or(BlockBusterError::Overflow)?
+            .checked_add(base_price.checked_mul(amount).ok_or(BlockBusterError::Overflow)?)
+            .ok_or(BlockBusterError::Overflow)?;
 
     Ok(buy_lamports as u64)
 }

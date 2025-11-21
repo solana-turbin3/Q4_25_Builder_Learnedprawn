@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-block_buster = "8uDndoDUtLqD3fhiZdKk9HAuQd3dVcbEkPNYS68iq5rZ"
+block_buster = "EziYSqVF5YJC3p9YovfASETNEkbbUgHuyVSpRf5BM2mK"
 
 [programs.localnet]
-block_buster = "8uDndoDUtLqD3fhiZdKk9HAuQd3dVcbEkPNYS68iq5rZ"
+block_buster = "CCkieuM2is2cXq5HByfvX4wk27HbwHoiuYCfrrJNE27r"
 
 [registry]
 url = "https://api.apr.dev"

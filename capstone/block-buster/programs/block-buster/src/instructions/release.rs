@@ -2,12 +2,9 @@ use anchor_lang::{
     prelude::*,
     system_program::{transfer, Transfer},
 };
-use anchor_spl::token::{Mint, Token};
+use anchor_spl::token::Mint;
 
-use crate::{
-    error::BlockBusterError, state::Settings, BondingCurve, CURVE, EXIT_POOL, MINT, SETTINGS,
-    SUPPLY, VAULT_CURVE,
-};
+use crate::{error::BlockBusterError, BondingCurve, CURVE, EXIT_POOL, MINT};
 
 #[derive(Accounts)]
 pub struct Release<'info> {
@@ -26,7 +23,8 @@ pub struct Release<'info> {
         mut,
         seeds = [CURVE.as_ref(), movie_mint.key().as_ref()],
         bump,
-        constraint = bonding_curve.complete @ BlockBusterError::Complete
+        constraint = bonding_curve.complete @ BlockBusterError::NotComplete,
+        constraint = bonding_curve.initializer == creator.key() @ BlockBusterError::NotCreator,
     )]
     pub bonding_curve: Account<'info, BondingCurve>,
 
@@ -41,7 +39,7 @@ pub struct Release<'info> {
 }
 
 impl<'info> Release<'info> {
-    pub fn release(&mut self, ticket_price: u64, bumps: &ReleaseBumps) -> Result<()> {
+    pub fn release(&mut self, ticket_price: u64) -> Result<()> {
         let rent_exempt: u64 =
             Rent::get()?.minimum_balance(self.exit_pool.to_account_info().data_len());
         let cpi_program = self.system_program.to_account_info();

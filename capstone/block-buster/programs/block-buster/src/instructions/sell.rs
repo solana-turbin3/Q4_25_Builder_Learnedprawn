@@ -72,13 +72,10 @@ impl<'info> Sell<'info> {
             burn_accounts,
         );
 
-        //TODO: decimal precision
         burn(burn_context, amount_in_tokens)?;
 
         self.bonding_curve.token_reserve -= amount_in_tokens;
 
-
-        msg!("lamports: {}" ,lamports);
         let transfer_signer_seeds: &[&[&[u8]]] = &[&[
         // seeds = [VAULT_CURVE.as_ref(), movie_mint.key().as_ref()],
             VAULT_CURVE,
@@ -98,17 +95,6 @@ impl<'info> Sell<'info> {
         Ok(())
     }
 
-    //using a linear bonding curve for PoC
-    // let price  = a*supply + initial_price;
-    pub fn calculate_sol_cost(&mut self, amount_in_tokens: u64) -> Result<u64 >{
-        let slope: u64 = 1;
-        let initial_price: u64 = 1;
-        let token_price_in_sol: u64 = slope.checked_mul(self.bonding_curve.token_reserve as u64).ok_or(BlockBusterError::Overflow)?.checked_add(initial_price).ok_or(BlockBusterError::Overflow)?;  
-        let sol_amount = amount_in_tokens.checked_mul(token_price_in_sol).ok_or(BlockBusterError::Overflow)?;
-        msg!("sol_amount: {}" ,sol_amount);
-
-       Ok(sol_amount)
-    }
     pub fn calculate_price_in_lamports(
         &mut self,
     amount: u64,
@@ -116,9 +102,7 @@ impl<'info> Sell<'info> {
     let amount = amount as u128;
     let base_price = self.bonding_curve.initial_price as u128;
     let slope = self.bonding_curve.slope as u128;
-    // let supply = (self.movie_mint.supply as u128).checked_sub(amount).ok_or(BlockBusterError::Overflow)?;
     let supply = self.bonding_curve.token_reserve as u128;
-    let scale = 10u128.pow(self.movie_mint.decimals as u32);
 
     // price = base_price + slope * supply
         // cost = slope * (k²) / 2 + initial_price * k
@@ -126,30 +110,14 @@ impl<'info> Sell<'info> {
         // cost(s, k) = (m/2) * ((s+k)² - s²) + c*k
         // SELL:
         // cost(s, k) = (m/2) * ((s)² - (s-k)²) + c*k
-        msg!("amount: {}", amount);
-        msg!("base_price: {}", base_price);
-        msg!("slope: {}", slope);
-        msg!("supply: {}", supply);
-        let old_refund_lamports = (slope  * (supply.pow(2) - (supply - amount).pow(2))) / 2  + base_price * amount;
-        msg!("old_lamports: {}", old_refund_lamports);
-        // refund_lamports = slope.checked_mul(supply.pow(2).checked_sub((supply.checked_sub(amount).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?.pow(2))).ok_or(BlockBusterError::Overflow)?;
-        let refund_lamports = slope.checked_mul(supply.pow(2).checked_sub(supply.checked_sub(amount).ok_or(BlockBusterError::Overflow)?.pow(2)).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?.checked_div(2).ok_or(BlockBusterError::Overflow)?.checked_add(base_price.checked_mul(amount).ok_or(BlockBusterError::Overflow)?).ok_or(BlockBusterError::Overflow)?;
-        msg!("new_refund_lamports: {}", refund_lamports);
+        // let old_refund_lamports = (slope  * (supply.pow(2) - (supply - amount).pow(2))) / 2  + base_price * amount;
 
-
-    // let price = base_price
-    //     .checked_add(slope.checked_mul(supply).ok_or(BlockBusterError::Overflow)?)
-    //     .ok_or(BlockBusterError::Overflow)?;
-    //
-    // // cost = (amount * price) / 10^decimals
-    // let total_cost = amount
-    //     .checked_mul(price)
-    //     .ok_or(BlockBusterError::Overflow)?;
-    //
-        // refund_lamports = refund_lamports
-        // .checked_div(scale)
-        // .ok_or(BlockBusterError::Overflow)?;
-        msg!("SELL lamports: {}", refund_lamports);
+        let refund_lamports = slope.checked_mul(supply.pow(2).checked_sub(supply.checked_sub(amount).ok_or(BlockBusterError::Overflow)?
+            .pow(2)).ok_or(BlockBusterError::Overflow)?)
+            .ok_or(BlockBusterError::Overflow)?
+            .checked_div(2).ok_or(BlockBusterError::Overflow)?
+            .checked_add(base_price.checked_mul(amount).ok_or(BlockBusterError::Overflow)?)
+            .ok_or(BlockBusterError::Overflow)?;
 
     Ok(refund_lamports as u64)
     }
